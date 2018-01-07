@@ -1,0 +1,142 @@
+From 79193679220432c9f124c2d6a7c8edbb3ba3758d Mon Sep 17 00:00:00 2001
+From: lambdadroid <lambdadroid@gmail.com>
+Date: Thu, 10 Aug 2017 19:40:31 +0200
+Subject: [PATCH 07/12] input: misc: Add ASUS Lid Cover driver
+
+---
+ drivers/input/misc/Kconfig    | 10 +++++
+ drivers/input/misc/Makefile   |  1 +
+ drivers/input/misc/asus-lid.c | 88 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 99 insertions(+)
+ create mode 100644 drivers/input/misc/asus-lid.c
+
+diff --git a/drivers/input/misc/Kconfig b/drivers/input/misc/Kconfig
+index 9f082a388388..457fdf2ff87e 100644
+--- a/drivers/input/misc/Kconfig
++++ b/drivers/input/misc/Kconfig
+@@ -82,6 +82,16 @@ config INPUT_ARIZONA_HAPTICS
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called arizona-haptics.
+ 
++config INPUT_ASUS_LID
++	tristate "ASUS Lid Cover support"
++	depends on KEYBOARD_GPIO
++	help
++	  Say Y to enable support for the Asus Lid Cover used in the
++	  ASUS MeMO Pad 7 (ME176C) and other ASUS tablets.
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called asus-lid.
++
+ config INPUT_ATMEL_CAPTOUCH
+ 	tristate "Atmel Capacitive Touch Button Driver"
+ 	depends on OF || COMPILE_TEST
+diff --git a/drivers/input/misc/Makefile b/drivers/input/misc/Makefile
+index 4b6118d313fe..332048f3e0a2 100644
+--- a/drivers/input/misc/Makefile
++++ b/drivers/input/misc/Makefile
+@@ -16,6 +16,7 @@ obj-$(CONFIG_INPUT_ADXL34X_I2C)		+= adxl34x-i2c.o
+ obj-$(CONFIG_INPUT_ADXL34X_SPI)		+= adxl34x-spi.o
+ obj-$(CONFIG_INPUT_APANEL)		+= apanel.o
+ obj-$(CONFIG_INPUT_ARIZONA_HAPTICS)	+= arizona-haptics.o
++obj-$(CONFIG_INPUT_ASUS_LID)		+= asus-lid.o
+ obj-$(CONFIG_INPUT_ATI_REMOTE2)		+= ati_remote2.o
+ obj-$(CONFIG_INPUT_ATLAS_BTNS)		+= atlas_btns.o
+ obj-$(CONFIG_INPUT_ATMEL_CAPTOUCH)	+= atmel_captouch.o
+diff --git a/drivers/input/misc/asus-lid.c b/drivers/input/misc/asus-lid.c
+new file mode 100644
+index 000000000000..14d887ca0b14
+--- /dev/null
++++ b/drivers/input/misc/asus-lid.c
+@@ -0,0 +1,88 @@
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/acpi.h>
++#include <linux/input.h>
++#include <linux/gpio.h>
++#include <linux/gpio/consumer.h>
++#include <linux/gpio_keys.h>
++
++struct gpio_keys_button asus_lid_button = {
++	.desc = "asus_lid",
++	.type = EV_SW,
++	.code = SW_LID,
++	.wakeup = 1,
++	.active_low = 1,
++	.debounce_interval = 50,
++	.can_disable = 1,
++};
++
++struct gpio_keys_platform_data gpio_keys_pdata = {
++	.name = "ASUS Lid Cover",
++	.buttons = &asus_lid_button,
++	.nbuttons = 1,
++};
++
++static int asus_lid_set_gpio(struct device *dev)
++{
++	struct gpio_desc *desc;
++
++	desc = gpiod_get(dev, NULL, GPIOD_ASIS);
++	if (IS_ERR(desc))
++		return PTR_ERR(desc);
++
++	asus_lid_button.gpio = desc_to_gpio(desc);
++	gpiod_put(desc);
++	return 0;
++}
++
++static int asus_lid_probe(struct platform_device *pdev)
++{
++	struct platform_device *gpio_keys_pdev;
++	int ret;
++
++	ret = asus_lid_set_gpio(&pdev->dev);
++	if (ret)
++		return ret;
++
++	gpio_keys_pdev = platform_device_alloc("gpio-keys", PLATFORM_DEVID_AUTO);
++	if (!gpio_keys_pdev)
++		return -ENOMEM;
++
++	gpio_keys_pdev->dev.parent = &pdev->dev;
++	platform_set_drvdata(pdev, gpio_keys_pdev);
++
++	ret = platform_device_add_data(gpio_keys_pdev, &gpio_keys_pdata,
++					sizeof(gpio_keys_pdata));
++	if (ret)
++		return ret;
++
++	return platform_device_add(gpio_keys_pdev);
++}
++
++static int asus_lid_remove(struct platform_device *pdev)
++{
++	struct platform_device *gpio_keys_pdev = platform_get_drvdata(pdev);
++	platform_device_unregister(gpio_keys_pdev);
++	return 0;
++}
++
++static const struct acpi_device_id asus_lid_acpi_match[] = {
++	{ "APX9131", 0 },
++	{ "YOB8251", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(acpi, asus_lid_acpi_match);
++
++static struct platform_driver asus_lid_driver = {
++	.probe = asus_lid_probe,
++	.remove = asus_lid_remove,
++	.driver = {
++		.name = "asus-lid",
++		.acpi_match_table = ACPI_PTR(asus_lid_acpi_match),
++	},
++};
++module_platform_driver(asus_lid_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("lambdadroid <lambdadroid@gmail.com>");
++MODULE_DESCRIPTION("ASUS Lid Cover Driver");
+-- 
+2.15.1
+

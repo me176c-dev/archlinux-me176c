@@ -1,0 +1,25 @@
+From 63096804502da92d8740459f327c01051afb5984 Mon Sep 17 00:00:00 2001
+From: lambdadroid <lambdadroid@gmail.com>
+Date: Wed, 28 Jun 2017 11:53:35 +0200
+Subject: [PATCH 05/12] iio: magnetometer: ak8975: Add the "AKM9911" ACPI id
+
+Found on ASUS MeMO Pad 7 (ME176C).
+---
+ drivers/iio/magnetometer/ak8975.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/iio/magnetometer/ak8975.c b/drivers/iio/magnetometer/ak8975.c
+index 4ff883942f7b..ac83992cd8a2 100644
+--- a/drivers/iio/magnetometer/ak8975.c
++++ b/drivers/iio/magnetometer/ak8975.c
+@@ -790,6 +790,7 @@ static const struct acpi_device_id ak_acpi_match[] = {
+ 	{"AK8963", AK8963},
+ 	{"INVN6500", AK8963},
+ 	{"AK09911", AK09911},
++	{"AKM9911", AK09911},
+ 	{"AK09912", AK09912},
+ 	{ },
+ };
+-- 
+2.15.1
+

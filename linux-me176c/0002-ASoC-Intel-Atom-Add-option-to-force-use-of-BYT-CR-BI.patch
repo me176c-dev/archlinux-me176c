@@ -1,0 +1,53 @@
+From 62651e3fb4349cffa3d1f2116f73ad9641556e08 Mon Sep 17 00:00:00 2001
+From: lambdadroid <lambdadroid@gmail.com>
+Date: Sat, 24 Jun 2017 11:55:55 +0200
+Subject: [PATCH 02/12] ASoC: Intel: Atom: Add option to force use of BYT-CR
+ BIOS resources
+
+Apparently, there are also BYT-T devices with the same...
+---
+ sound/soc/intel/Kconfig             | 4 ++++
+ sound/soc/intel/atom/sst/sst_acpi.c | 5 +++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/sound/soc/intel/Kconfig b/sound/soc/intel/Kconfig
+index b3c7f554ec30..534a8de1f77a 100644
+--- a/sound/soc/intel/Kconfig
++++ b/sound/soc/intel/Kconfig
+@@ -27,6 +27,10 @@ config SND_SST_IPC_ACPI
+ 	select SND_SOC_INTEL_SST
+ 	select IOSF_MBI
+ 
++config SND_SST_IPC_ACPI_FORCE_BYTCR
++	bool "Force use of BYTCR BIOS resources"
++	depends on SND_SOC_INTEL_SST_ACPI
++
+ config SND_SOC_INTEL_SST
+ 	tristate
+ 	select SND_SOC_INTEL_SST_ACPI if ACPI
+diff --git a/sound/soc/intel/atom/sst/sst_acpi.c b/sound/soc/intel/atom/sst/sst_acpi.c
+index 0e928d54305d..0efe5f8a7e1a 100644
+--- a/sound/soc/intel/atom/sst/sst_acpi.c
++++ b/sound/soc/intel/atom/sst/sst_acpi.c
+@@ -244,6 +244,9 @@ static int is_byt_cr(struct device *dev, bool *bytcr)
+ {
+ 	int status = 0;
+ 
++#ifdef CONFIG_SND_SST_IPC_ACPI_FORCE_BYTCR
++	*bytcr = true;
++#else
+ 	if (IS_ENABLED(CONFIG_IOSF_MBI)) {
+ 		static const struct x86_cpu_id cpu_ids[] = {
+ 			{ X86_VENDOR_INTEL, 6, 55 }, /* Valleyview, Bay Trail */
+@@ -275,6 +278,8 @@ static int is_byt_cr(struct device *dev, bool *bytcr)
+ 	} else {
+ 		dev_info(dev, "IOSF_MBI not enabled, no BYT-CR detection\n");
+ 	}
++#endif
++
+ 	return status;
+ }
+ 
+-- 
+2.15.1
+

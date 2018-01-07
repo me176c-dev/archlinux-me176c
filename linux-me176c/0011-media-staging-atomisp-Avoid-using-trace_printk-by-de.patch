@@ -1,0 +1,76 @@
+From 69986d209ce9420f3409464fb6ad41b428a19e03 Mon Sep 17 00:00:00 2001
+From: lambdadroid <lambdadroid@gmail.com>
+Date: Wed, 3 Jan 2018 12:59:40 +0100
+Subject: [PATCH 11/12] media: staging: atomisp: Avoid using trace_printk() by
+ default
+
+---
+ drivers/staging/media/atomisp/pci/Kconfig                         | 5 +++++
+ drivers/staging/media/atomisp/pci/atomisp2/atomisp_compat_css20.c | 4 ++++
+ drivers/staging/media/atomisp/pci/atomisp2/hmm/hmm.c              | 7 ++++++-
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/media/atomisp/pci/Kconfig b/drivers/staging/media/atomisp/pci/Kconfig
+index a72421431c7a..b0282c422d68 100644
+--- a/drivers/staging/media/atomisp/pci/Kconfig
++++ b/drivers/staging/media/atomisp/pci/Kconfig
+@@ -11,3 +11,8 @@ config VIDEO_ATOMISP
+           camera imaging subsystem.
+           To compile this driver as a module, choose M here: the
+           module will be called atomisp
++
++if VIDEO_ATOMISP
++config VIDEO_ATOMISP_TRACE_PRINTK
++       bool "Use trace_printk() for debugging"
++endif # VIDEO_ATOMISP
+diff --git a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_compat_css20.c b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_compat_css20.c
+index 05897b747349..d49921fe6d1c 100644
+--- a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_compat_css20.c
++++ b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_compat_css20.c
+@@ -184,11 +184,13 @@ static int atomisp_css2_dbg_print(const char *fmt, va_list args)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_VIDEO_ATOMISP_TRACE_PRINTK
+ static int atomisp_css2_dbg_ftrace_print(const char *fmt, va_list args)
+ {
+ 	ftrace_vprintk(fmt, args);
+ 	return 0;
+ }
++#endif
+ 
+ static int atomisp_css2_err_print(const char *fmt, va_list args)
+ {
+@@ -894,9 +896,11 @@ static inline int __set_css_print_env(struct atomisp_device *isp, int opt)
+ 
+ 	if (0 == opt)
+ 		isp->css_env.isp_css_env.print_env.debug_print = NULL;
++#ifdef CONFIG_VIDEO_ATOMISP_TRACE_PRINTK
+ 	else if (1 == opt)
+ 		isp->css_env.isp_css_env.print_env.debug_print =
+ 			atomisp_css2_dbg_ftrace_print;
++#endif
+ 	else if (2 == opt)
+ 		isp->css_env.isp_css_env.print_env.debug_print =
+ 			atomisp_css2_dbg_print;
+diff --git a/drivers/staging/media/atomisp/pci/atomisp2/hmm/hmm.c b/drivers/staging/media/atomisp/pci/atomisp2/hmm/hmm.c
+index b8aae4ba5a78..ed56797c2065 100644
+--- a/drivers/staging/media/atomisp/pci/atomisp2/hmm/hmm.c
++++ b/drivers/staging/media/atomisp/pci/atomisp2/hmm/hmm.c
+@@ -701,7 +701,12 @@ ia_css_ptr hmm_host_vaddr_to_hrt_vaddr(const void *ptr)
+ 
+ void hmm_show_mem_stat(const char *func, const int line)
+ {
+-	trace_printk("tol_cnt=%d usr_size=%d res_size=%d res_cnt=%d sys_size=%d  dyc_thr=%d dyc_size=%d.\n",
++#ifdef CONFIG_VIDEO_ATOMISP_TRACE_PRINTK
++	trace_printk(
++#else
++	dev_dbg(atomisp_dev,
++#endif
++		"tol_cnt=%d usr_size=%d res_size=%d res_cnt=%d sys_size=%d  dyc_thr=%d dyc_size=%d.\n",
+ 		     hmm_mem_stat.tol_cnt,
+ 		     hmm_mem_stat.usr_size, hmm_mem_stat.res_size,
+ 		     hmm_mem_stat.res_cnt, hmm_mem_stat.sys_size,
+-- 
+2.15.1
+
