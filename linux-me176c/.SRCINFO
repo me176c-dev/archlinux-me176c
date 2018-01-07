@@ -1,7 +1,7 @@
 pkgbase = linux-me176c
 	pkgver = 4.14.12
 	pkgrel = 1
-	url = https://www.kernel.org/
+	url = https://github.com/me176c-dev/me176c-archlinux
 	arch = x86_64
 	license = GPL2
 	makedepends = xmlto
