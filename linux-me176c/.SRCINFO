@@ -1,6 +1,6 @@
 pkgbase = linux-me176c
 	pkgver = 4.14.12
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/me176c-dev/me176c-archlinux
 	arch = x86_64
 	license = GPL2
@@ -38,7 +38,7 @@ pkgbase = linux-me176c
 	sha256sums = SKIP
 	sha256sums = da5d8db44b0988e4c45346899d3f5a51f8bd6c25f14e729615ca9ff9f17bdefd
 	sha256sums = SKIP
-	sha256sums = 9f2cc137b5cbcfa551bd434b38d9d3d0fb3d9a62b32716d939daad7ff8df5210
+	sha256sums = 426d3a8c260ca3608eb91aa43588bba1a5d23795ad59a5b287ed3d81c506c1cb
 	sha256sums = ae2e95db94ef7176207c690224169594d49445e04249d2499e9d2fbc117a0b21
 	sha256sums = 75f99f5239e03238f88d1a834c50043ec32b1dc568f2cc291b07d04718483919
 	sha256sums = ad6344badc91ad0630caacde83f7f9b97276f80d26a20619a87952be65492c65
