@@ -1,0 +1,8 @@
+[Unit]
+Description=Attach Bluetooth controller
+
+[Service]
+ExecStart=/usr/bin/btattach -B /dev/ttyS2 -P bcm
+
+[Install]
+WantedBy=multi-user.target
