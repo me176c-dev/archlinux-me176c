@@ -1,6 +1,6 @@
 pkgbase = linux-me176c
 	pkgver = 4.14.12
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/me176c-dev/me176c-archlinux
 	arch = x86_64
 	license = GPL2
@@ -19,7 +19,7 @@ pkgbase = linux-me176c
 	source = 60-linux.hook
 	source = 90-linux.hook
 	source = linux.preset
-	source = git+https://github.com/me176c-dev/me176c-acpi.git
+	source = git+https://github.com/me176c-dev/me176c-acpi.git#commit=032c89d340794c2d8c7134675802ba9743613e9c
 	source = 0001-Move-mfd-drivers-up-in-Makefile.patch
 	source = 0002-ASoC-Intel-Atom-Add-option-to-force-use-of-BYT-CR-BI.patch
 	source = 0003-ASoC-Intel-bytcr_rt5640-Add-quirks-for-ASUS-MeMO-Pad.patch
@@ -32,6 +32,9 @@ pkgbase = linux-me176c
 	source = 0010-pinctrl-baytrail-Add-option-to-disable-warnings-abou.patch
 	source = 0011-media-staging-atomisp-Avoid-using-trace_printk-by-de.patch
 	source = 0012-platform-x86-Enable-INT0002-Virtual-GPIO-device-on-B.patch
+	source = 0013-Revert-pinctrl-baytrail-Do-not-add-all-GPIOs-to-IRQ-.patch
+	source = 0014-Revert-pinctrl-intel-set-default-handler-to-be-handl.patch
+	source = 0015-Revert-gpio-acpi-Override-GPIO-initialization-flags.patch
 	validpgpkeys = ABAF11C65A2970B130ABE3C479BE3E4300411886
 	validpgpkeys = 647F28654894E3BD457199BE38DBBDC86092693E
 	sha256sums = f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7
@@ -55,6 +58,9 @@ pkgbase = linux-me176c
 	sha256sums = efa20e85c23d07de91b8bc221dde98b58f25354b593e6a5712aa4f4d9b9c69d9
 	sha256sums = 32a2279d30f59b793d0314ddb38a59600fde600e2e37388809d7edff70df5760
 	sha256sums = 40a382972dc3811f9e2ebfbd3d1fece9c6105dfac0852984cdbb42adb9cd14fe
+	sha256sums = b112ed90c846645a027e3caae69973ebf3a7d15bdd5eac2f16bad4f9830bb620
+	sha256sums = 9f0091afc0c4cb151c8c2e6ac1928a6297bad61ce4f0623b33bd48edfec9829d
+	sha256sums = 57dea4fa00ebdfc04fa77e6019c99ea4a8327cf6eba271febac15a0c4354efbc
 
 pkgname = linux-me176c
 	pkgdesc = The Linux-me176c kernel and modules

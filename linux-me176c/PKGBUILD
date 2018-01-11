@@ -5,7 +5,7 @@
 pkgbase=linux-me176c         # Build kernel with a different name
 _srcname=linux-4.14
 pkgver=4.14.12
-pkgrel=2
+pkgrel=3
 arch=('x86_64')
 url="https://github.com/me176c-dev/me176c-archlinux"
 license=('GPL2')
@@ -20,7 +20,7 @@ source=(
   '60-linux.hook'  # pacman hook for depmod
   '90-linux.hook'  # pacman hook for initramfs regeneration
   'linux.preset'   # standard config files for mkinitcpio ramdisk
-  'git+https://github.com/me176c-dev/me176c-acpi.git'
+  'git+https://github.com/me176c-dev/me176c-acpi.git#commit=032c89d340794c2d8c7134675802ba9743613e9c'
   '0001-Move-mfd-drivers-up-in-Makefile.patch'
   '0002-ASoC-Intel-Atom-Add-option-to-force-use-of-BYT-CR-BI.patch'
   '0003-ASoC-Intel-bytcr_rt5640-Add-quirks-for-ASUS-MeMO-Pad.patch'
@@ -33,6 +33,9 @@ source=(
   '0010-pinctrl-baytrail-Add-option-to-disable-warnings-abou.patch'
   '0011-media-staging-atomisp-Avoid-using-trace_printk-by-de.patch'
   '0012-platform-x86-Enable-INT0002-Virtual-GPIO-device-on-B.patch'
+  '0013-Revert-pinctrl-baytrail-Do-not-add-all-GPIOs-to-IRQ-.patch'
+  '0014-Revert-pinctrl-intel-set-default-handler-to-be-handl.patch'
+  '0015-Revert-gpio-acpi-Override-GPIO-initialization-flags.patch'
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -58,7 +61,10 @@ sha256sums=('f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7'
             '2f96d294be0276e6388f23a7310180fd0723a1aa69d5c776e221a4be212df8d5'
             'efa20e85c23d07de91b8bc221dde98b58f25354b593e6a5712aa4f4d9b9c69d9'
             '32a2279d30f59b793d0314ddb38a59600fde600e2e37388809d7edff70df5760'
-            '40a382972dc3811f9e2ebfbd3d1fece9c6105dfac0852984cdbb42adb9cd14fe')
+            '40a382972dc3811f9e2ebfbd3d1fece9c6105dfac0852984cdbb42adb9cd14fe'
+            'b112ed90c846645a027e3caae69973ebf3a7d15bdd5eac2f16bad4f9830bb620'
+            '9f0091afc0c4cb151c8c2e6ac1928a6297bad61ce4f0623b33bd48edfec9829d'
+            '57dea4fa00ebdfc04fa77e6019c99ea4a8327cf6eba271febac15a0c4354efbc')
 
 _kernelname=${pkgbase#linux}
 
