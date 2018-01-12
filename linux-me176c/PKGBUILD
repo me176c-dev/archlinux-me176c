@@ -5,7 +5,7 @@
 pkgbase=linux-me176c         # Build kernel with a different name
 _srcname=linux-4.14
 pkgver=4.14.12
-pkgrel=3
+pkgrel=4
 arch=('x86_64')
 url="https://github.com/me176c-dev/me176c-archlinux"
 license=('GPL2')
@@ -36,6 +36,10 @@ source=(
   '0013-Revert-pinctrl-baytrail-Do-not-add-all-GPIOs-to-IRQ-.patch'
   '0014-Revert-pinctrl-intel-set-default-handler-to-be-handl.patch'
   '0015-Revert-gpio-acpi-Override-GPIO-initialization-flags.patch'
+  '0016-PM-Sleep-Add-wake-lock-api-wrapper-on-top-of-wakeup-.patch'
+  '0017-intel-mid-Add-compatibility-layer-for-old-intel_mid_.patch'
+  '0018-power-supply-Import-ASUS-MeMO-Pad-7-ME176C-battery-c.patch'
+  '0019-power-supply-Fix-ASUS-MeMO-Pad-7-ME176C-battery-char.patch'
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -45,7 +49,7 @@ sha256sums=('f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7'
             'SKIP'
             'da5d8db44b0988e4c45346899d3f5a51f8bd6c25f14e729615ca9ff9f17bdefd'
             'SKIP'
-            '426d3a8c260ca3608eb91aa43588bba1a5d23795ad59a5b287ed3d81c506c1cb'
+            '6c28610f28b777edbb0718159f11835d348bdafe5d01959e58bb25d73b1fbd48'
             'ae2e95db94ef7176207c690224169594d49445e04249d2499e9d2fbc117a0b21'
             '75f99f5239e03238f88d1a834c50043ec32b1dc568f2cc291b07d04718483919'
             'ad6344badc91ad0630caacde83f7f9b97276f80d26a20619a87952be65492c65'
@@ -64,7 +68,11 @@ sha256sums=('f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7'
             '40a382972dc3811f9e2ebfbd3d1fece9c6105dfac0852984cdbb42adb9cd14fe'
             'b112ed90c846645a027e3caae69973ebf3a7d15bdd5eac2f16bad4f9830bb620'
             '9f0091afc0c4cb151c8c2e6ac1928a6297bad61ce4f0623b33bd48edfec9829d'
-            '57dea4fa00ebdfc04fa77e6019c99ea4a8327cf6eba271febac15a0c4354efbc')
+            '57dea4fa00ebdfc04fa77e6019c99ea4a8327cf6eba271febac15a0c4354efbc'
+            '0ba1318d037be87248bcd1d1202ddf82ded9b864256238346df22e86486f9079'
+            '7cb3759d0cf2a407865888d3079c281bf3ee6f9f0bb3ce25974d02af877e5322'
+            '0457cb4f34f969490eb296eb127d8f7ca484b9dc53aa06d3007f7a2b4a476b1a'
+            'd0a6f4cb876404962f21c4e0ff4a5485ca139e724ad7eef4d1a47375c6ac68df')
 
 _kernelname=${pkgbase#linux}
 
