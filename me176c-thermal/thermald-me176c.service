@@ -1,0 +1,12 @@
+[Unit]
+Description=Thermal Daemon Service (ME176C)
+
+[Service]
+Type=dbus
+SuccessExitStatus=1
+BusName=org.freedesktop.thermald
+ExecStart=/usr/bin/thermald --no-daemon --dbus-enable --poll-interval 5 --ignore-cpuid-check --ignore-default-control --config-file=/etc/thermald/thermal-conf-me176c.xml
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-org.freedesktop.thermald.service
