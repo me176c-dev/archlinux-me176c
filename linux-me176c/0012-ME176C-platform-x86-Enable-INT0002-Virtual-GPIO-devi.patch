@@ -1,8 +1,8 @@
-From 69e40e21dc901d15a371210e13ec53a071840555 Mon Sep 17 00:00:00 2001
+From 966d798b7665e97b585725b86ac8832ffd42949a Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 3 Jan 2018 18:10:22 +0100
-Subject: [PATCH 12/12] platform/x86: Enable INT0002 Virtual GPIO device on
- Baytrail as well
+Subject: [PATCH 12/22] ME176C: platform/x86: Enable INT0002 Virtual GPIO
+ device on Baytrail
 
 ---
  drivers/platform/x86/intel_int0002_vgpio.c | 6 +-----
@@ -26,5 +26,5 @@ index 92dc230ef5b2..cf56b8ad22e5 100644
  	{}
  };
 -- 
-2.15.1
+2.16.2
 

@@ -1,0 +1,107 @@
+From b379726fe9f35ff06487c358b54317a4cc605ce5 Mon Sep 17 00:00:00 2001
+From: lambdadroid <lambdadroid@gmail.com>
+Date: Sat, 3 Mar 2018 16:06:23 +0100
+Subject: [PATCH 22/22] ME176C: Revert "Input: goodix - poll the 'buffer
+ status' bit before reading data"
+
+This reverts commit 9b5db7aab4d6b66f84f5e147c87eff4fe8b48651.
+
+Seems to cause problems with touchscreen sensitivity.
+---
+ drivers/input/touchscreen/goodix.c | 67 +++++++++++++-------------------------
+ 1 file changed, 23 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
+index b3bbad7d2282..32d2762448aa 100644
+--- a/drivers/input/touchscreen/goodix.c
++++ b/drivers/input/touchscreen/goodix.c
+@@ -72,9 +72,6 @@ struct goodix_ts_data {
+ #define GOODIX_REG_CONFIG_DATA		0x8047
+ #define GOODIX_REG_ID			0x8140
+ 
+-#define GOODIX_BUFFER_STATUS_READY	BIT(7)
+-#define GOODIX_BUFFER_STATUS_TIMEOUT	20
+-
+ #define RESOLUTION_LOC		1
+ #define MAX_CONTACTS_LOC	5
+ #define TRIGGER_LOC		6
+@@ -198,53 +195,35 @@ static int goodix_get_cfg_len(u16 id)
+ 
+ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
+ {
+-	unsigned long max_timeout;
+ 	int touch_num;
+ 	int error;
+ 
+-	/*
+-	 * The 'buffer status' bit, which indicates that the data is valid, is
+-	 * not set as soon as the interrupt is raised, but slightly after.
+-	 * This takes around 10 ms to happen, so we poll for 20 ms.
+-	 */
+-	max_timeout = jiffies + msecs_to_jiffies(GOODIX_BUFFER_STATUS_TIMEOUT);
+-	do {
+-		error = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR,
+-					data, GOODIX_CONTACT_SIZE + 1);
+-		if (error) {
+-			dev_err(&ts->client->dev, "I2C transfer error: %d\n",
+-					error);
+-			return error;
+-		}
++	error = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR, data,
++				GOODIX_CONTACT_SIZE + 1);
++	if (error) {
++		dev_err(&ts->client->dev, "I2C transfer error: %d\n", error);
++		return error;
++	}
+ 
+-		if (data[0] & GOODIX_BUFFER_STATUS_READY) {
+-			touch_num = data[0] & 0x0f;
+-			if (touch_num > ts->max_touch_num)
+-				return -EPROTO;
+-
+-			if (touch_num > 1) {
+-				data += 1 + GOODIX_CONTACT_SIZE;
+-				error = goodix_i2c_read(ts->client,
+-						GOODIX_READ_COOR_ADDR +
+-							1 + GOODIX_CONTACT_SIZE,
+-						data,
+-						GOODIX_CONTACT_SIZE *
+-							(touch_num - 1));
+-				if (error)
+-					return error;
+-			}
+-
+-			return touch_num;
+-		}
++	if (!(data[0] & 0x80))
++		return -EAGAIN;
+ 
+-		usleep_range(1000, 2000); /* Poll every 1 - 2 ms */
+-	} while (time_before(jiffies, max_timeout));
++	touch_num = data[0] & 0x0f;
++	if (touch_num > ts->max_touch_num)
++		return -EPROTO;
++
++	if (touch_num > 1) {
++		data += 1 + GOODIX_CONTACT_SIZE;
++		error = goodix_i2c_read(ts->client,
++					GOODIX_READ_COOR_ADDR +
++						1 + GOODIX_CONTACT_SIZE,
++					data,
++					GOODIX_CONTACT_SIZE * (touch_num - 1));
++		if (error)
++			return error;
++	}
+ 
+-	/*
+-	 * The Goodix panel will send spurious interrupts after a
+-	 * 'finger up' event, which will always cause a timeout.
+-	 */
+-	return 0;
++	return touch_num;
+ }
+ 
+ static void goodix_ts_report_touch(struct goodix_ts_data *ts, u8 *coor_data)
+-- 
+2.16.2
+

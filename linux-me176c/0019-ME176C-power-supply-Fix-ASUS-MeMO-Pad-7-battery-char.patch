@@ -1,7 +1,7 @@
-From 47368e945243de68b0502fed7722087e010a25c9 Mon Sep 17 00:00:00 2001
+From 6ec21b4d9d334bd1e06c22178db9e003a86a3362 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 24 May 2017 16:15:17 +0200
-Subject: [PATCH 19/19] power: supply: Fix ASUS MeMO Pad 7 (ME176C)
+Subject: [PATCH 19/22] ME176C: power: supply: Fix ASUS MeMO Pad 7
  battery/charger drivers
 
 - Major cleanup for bq24192_charger: removed a lot of unused code
@@ -2710,5 +2710,5 @@ index bcff1c68b689..1bcd50f94917 100644
 -obj-y += ASUS_BATTERY/ME176C/
 +obj-$(CONFIG_ASUS_ME176C_BATTERY) += ASUS_BATTERY/ME176C/
 -- 
-2.15.1
+2.16.2
 

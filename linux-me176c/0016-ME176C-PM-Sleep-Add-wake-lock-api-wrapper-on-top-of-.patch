@@ -1,8 +1,8 @@
-From 1e091a6ab7b220fe5d8976657a01abd10f2e0bba Mon Sep 17 00:00:00 2001
+From f98eb59e29c02cec7c9fac08281c5d718798eb1c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>
 Date: Fri, 16 Mar 2012 17:44:42 -0700
-Subject: [PATCH 16/19] PM / Sleep: Add wake lock api wrapper on top of wakeup
- sources
+Subject: [PATCH 16/22] ME176C: PM / Sleep: Add wake lock api wrapper on top of
+ wakeup sources
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -104,5 +104,5 @@ index e8517b63eb37..03203c95ed1e 100644
  	bool
  
 -- 
-2.15.1
+2.16.2
 

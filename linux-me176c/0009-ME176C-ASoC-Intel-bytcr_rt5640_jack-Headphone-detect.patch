@@ -1,8 +1,8 @@
-From 26a74c7321394245c0f1cbfd22d4749d87e9ab1e Mon Sep 17 00:00:00 2001
+From 4289a34623c5e6cb50bc6a855cb033e3073fc4d3 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sun, 3 Sep 2017 19:08:11 +0200
-Subject: [PATCH 09/12] ASoC: Intel: bytcr_rt5640_jack: Add Headphone detection
- driver (v2)
+Subject: [PATCH 09/22] ME176C: ASoC: Intel: bytcr_rt5640_jack: Headphone
+ detection driver (v2)
 
 ---
  sound/soc/intel/Kconfig                    |   4 ++
@@ -13,10 +13,10 @@ Subject: [PATCH 09/12] ASoC: Intel: bytcr_rt5640_jack: Add Headphone detection
  create mode 100644 sound/soc/intel/boards/bytcr_rt5640_jack.c
 
 diff --git a/sound/soc/intel/Kconfig b/sound/soc/intel/Kconfig
-index 534a8de1f77a..4f5b8ff78c10 100644
+index b3c7f554ec30..f873a7802fab 100644
 --- a/sound/soc/intel/Kconfig
 +++ b/sound/soc/intel/Kconfig
-@@ -155,6 +155,10 @@ config SND_SOC_INTEL_BYTCR_RT5640_MACH
+@@ -151,6 +151,10 @@ config SND_SOC_INTEL_BYTCR_RT5640_MACH
            Say Y if you have such a device.
            If unsure select "N".
  
@@ -176,5 +176,5 @@ index 000000000000..f53c39e1dccf
 +MODULE_AUTHOR("Lambdadroid <lambdadroid@gmail.com>");
 +MODULE_LICENSE("GPL v2");
 -- 
-2.15.1
+2.16.2
 

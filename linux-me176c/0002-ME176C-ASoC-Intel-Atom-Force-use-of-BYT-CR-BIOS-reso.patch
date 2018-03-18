@@ -1,0 +1,35 @@
+From a1e49070c7188daed31010e94ce8b52d428b1ff4 Mon Sep 17 00:00:00 2001
+From: lambdadroid <lambdadroid@gmail.com>
+Date: Sat, 24 Jun 2017 11:55:55 +0200
+Subject: [PATCH 02/22] ME176C: ASoC: Intel: Atom: Force use of BYT-CR BIOS
+ resources
+
+Apparently, there are also BYT-T devices with the same...
+---
+ sound/soc/intel/atom/sst/sst_acpi.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sound/soc/intel/atom/sst/sst_acpi.c b/sound/soc/intel/atom/sst/sst_acpi.c
+index 0e928d54305d..6ee22c07ee3a 100644
+--- a/sound/soc/intel/atom/sst/sst_acpi.c
++++ b/sound/soc/intel/atom/sst/sst_acpi.c
+@@ -244,6 +244,8 @@ static int is_byt_cr(struct device *dev, bool *bytcr)
+ {
+ 	int status = 0;
+ 
++	*bytcr = true;
++#if 0
+ 	if (IS_ENABLED(CONFIG_IOSF_MBI)) {
+ 		static const struct x86_cpu_id cpu_ids[] = {
+ 			{ X86_VENDOR_INTEL, 6, 55 }, /* Valleyview, Bay Trail */
+@@ -275,6 +277,7 @@ static int is_byt_cr(struct device *dev, bool *bytcr)
+ 	} else {
+ 		dev_info(dev, "IOSF_MBI not enabled, no BYT-CR detection\n");
+ 	}
++#endif
+ 	return status;
+ }
+ 
+-- 
+2.16.2
+

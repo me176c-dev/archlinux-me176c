@@ -1,7 +1,7 @@
-From f2775381fd499c2b322ba42cc02ad649c65d204f Mon Sep 17 00:00:00 2001
+From 0a9140bb1961a9050556cce0e8b17d41dab9a701 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:52:54 +0200
-Subject: [PATCH 04/12] iio: accel: kxcjk-1013: Add the "KXJ2109" ACPI id
+Subject: [PATCH 04/22] iio: accel: kxcjk-1013: Add the "KXJ2109" ACPI id
 
 Found on ASUS MeMO Pad 7 (ME176C).
 ---
@@ -21,5 +21,5 @@ index 3f968c46e667..673efd1ce66b 100644
  	{ },
  };
 -- 
-2.15.1
+2.16.2
 

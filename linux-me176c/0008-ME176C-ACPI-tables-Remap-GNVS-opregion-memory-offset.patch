@@ -1,7 +1,7 @@
-From 23d72a95f306d4a2fc1254f1ef1264c4e939a7b5 Mon Sep 17 00:00:00 2001
+From 7b01f57927ff5f6629266dd197fb03cd6cfb236a Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sat, 2 Sep 2017 21:55:56 +0200
-Subject: [PATCH 08/12] ACPI / tables: Remap GNVS operation region memory
+Subject: [PATCH 08/22] ME176C: ACPI / tables: Remap GNVS opregion memory
  offset in custom DSDTs
 
 We want to override the DSDT table at runtime to fix various issues
@@ -101,5 +101,5 @@ index 80ce2a7d224b..bf1074c242e5 100644
  	if (*new_table != NULL)
  		acpi_table_taint(existing_table);
 -- 
-2.15.1
+2.16.2
 
