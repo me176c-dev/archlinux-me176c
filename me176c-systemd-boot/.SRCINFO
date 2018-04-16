@@ -1,0 +1,14 @@
+pkgbase = me176c-systemd-boot
+	pkgdesc = Simple UEFI boot manager for the ASUS MeMO Pad 7 (ME176C/X) (fork of systemd-boot)
+	pkgver = 238.0
+	pkgrel = 1
+	url = https://github.com/me176c-dev/systemd-boot-me176
+	arch = x86_64
+	license = LGPL2.1
+	makedepends = meson
+	makedepends = gnu-efi-libs
+	source = https://github.com/me176c-dev/systemd-boot-me176/archive/238.0.tar.gz
+	sha256sums = cc015808e33da4b8a9f723e0215180bf60533175c38a0349837a450fe2dda5b2
+
+pkgname = me176c-systemd-boot
+
