@@ -4,7 +4,7 @@
 #pkgbase=linux               # Build stock -ARCH kernel
 pkgbase=linux-me176c         # Build kernel with a different name
 _srcname=linux-4.14
-pkgver=4.14.27
+pkgver=4.14.34
 pkgrel=1
 arch=('x86_64')
 url="https://github.com/me176c-dev/me176c-archlinux"
@@ -50,7 +50,7 @@ validpgpkeys=(
 )
 sha256sums=('f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7'
             'SKIP'
-            '74211925a4f15245001836eb8f89568c5b76591cc65d3c006d9198780c51850e'
+            'd5981abb1f9f73cc64843eefe1501166b6135ca41f73bb4c5dbe960f739edf6c'
             'SKIP'
             '889709f00e191d728efb80c73b30f597f33592b353c4072bad6ea3a309b28add'
             'ae2e95db94ef7176207c690224169594d49445e04249d2499e9d2fbc117a0b21'
