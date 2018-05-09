@@ -1,22 +1,27 @@
-From 6ec21b4d9d334bd1e06c22178db9e003a86a3362 Mon Sep 17 00:00:00 2001
+From 7ab3d0cb5f5eb1eeb38af385a69c97b612428675 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 24 May 2017 16:15:17 +0200
-Subject: [PATCH 19/22] ME176C: power: supply: Fix ASUS MeMO Pad 7
- battery/charger drivers
+Subject: [PATCH 19/25] ME176C: power: supply: Fix battery/charger drivers (v2)
 
-- Major cleanup for bq24192_charger: removed a lot of unused code
-- Load bq24192_charger using ACPI (added to custom DSDT table)
-- Silence some annoying log messages for UPI battery driver
+ - Major cleanup for bq24192_charger: removed a lot of unused code
+ - Load bq24192_charger using ACPI (added to custom DSDT table)
+ - Silence some annoying log messages for UPI battery driver
+
+v2:
+ - More cleanup; removed more unused code
+ - Use extcon to get charger detection results
+ - Enable USB OTG support (enable OTG 5V boost if OTG cable is
+   detected)
 ---
- drivers/power/supply/ASUS_BATTERY/ME176C/Kconfig   |    2 +-
- .../supply/ASUS_BATTERY/ME176C/bq24192_charger.c   | 1594 ++------------------
- .../ME176C/ug31xx/uG31xx_API_Measurement.c         |   10 +-
- .../ME176C/ug31xx/uG31xx_API_Platform.c            |    3 +-
- .../ME176C/ug31xx/uG31xx_API_Platform.h            |    3 +-
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_System.c |    2 +-
- .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_gauge.c      |   89 +-
- drivers/power/supply/Makefile                      |    2 +-
- 8 files changed, 224 insertions(+), 1481 deletions(-)
+ .../power/supply/ASUS_BATTERY/ME176C/Kconfig  |    2 +-
+ .../ASUS_BATTERY/ME176C/bq24192_charger.c     | 2050 +++--------------
+ .../ME176C/ug31xx/uG31xx_API_Measurement.c    |   10 +-
+ .../ME176C/ug31xx/uG31xx_API_Platform.c       |    3 +-
+ .../ME176C/ug31xx/uG31xx_API_Platform.h       |    3 +-
+ .../ME176C/ug31xx/uG31xx_API_System.c         |    2 +-
+ .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_gauge.c |   89 +-
+ drivers/power/supply/Makefile                 |    2 +-
+ 8 files changed, 415 insertions(+), 1746 deletions(-)
 
 diff --git a/drivers/power/supply/ASUS_BATTERY/ME176C/Kconfig b/drivers/power/supply/ASUS_BATTERY/ME176C/Kconfig
 index 36c8bdc71d9c..497042183009 100644
@@ -32,7 +37,7 @@ index 36c8bdc71d9c..497042183009 100644
  	  BQ24192 is the charger chip for lithium-ion (Li+) batteries
  	  in handheld and portable equipment.
 diff --git a/drivers/power/supply/ASUS_BATTERY/ME176C/bq24192_charger.c b/drivers/power/supply/ASUS_BATTERY/ME176C/bq24192_charger.c
-index 841243513818..60d43d970359 100755
+index 841243513818..0dab75adf5aa 100755
 --- a/drivers/power/supply/ASUS_BATTERY/ME176C/bq24192_charger.c
 +++ b/drivers/power/supply/ASUS_BATTERY/ME176C/bq24192_charger.c
 @@ -34,7 +34,6 @@
@@ -84,7 +89,8 @@ index 841243513818..60d43d970359 100755
 -
  static struct power_supply *fg_psy;
  struct bq24192_chip *chip_extern=NULL;
- extern int entry_mode;
+-extern int entry_mode;
++//extern int entry_mode;
  
  //...........................................................................
 -static int bq2415x_sysfs_flag=0; //lambert
@@ -103,7 +109,7 @@ index 841243513818..60d43d970359 100755
  	BQ24192_CHRGR_STAT_UNKNOWN =0,
  	BQ24192_CHRGR_STAT_CHARGING,
  	BQ24192_CHRGR_STAT_FAULT,
-@@ -260,29 +241,18 @@ static enum bq24192_chrgr_stat {
+@@ -260,29 +241,20 @@ static enum bq24192_chrgr_stat {
  
  struct bq24192_chip {
  	struct i2c_client *client;
@@ -116,8 +122,7 @@ index 841243513818..60d43d970359 100755
  	struct delayed_work jeita_wrkr;
 -	struct delayed_work chrg_temp_wrkr;
 -	struct delayed_work otg_disable_wrkr;
-+	//struct delayed_work otg_disable_wrkr;
- 	struct delayed_work otg_wrkr;
+-	struct delayed_work otg_wrkr;
 -	struct work_struct otg_evt_work;
 -	struct notifier_block	otg_nb;
 -	struct list_head	otg_queue;
@@ -129,14 +134,32 @@ index 841243513818..60d43d970359 100755
  	struct wake_lock wakelock;
 -	spinlock_t otg_queue_lock;
  
++	struct extcon_dev *vbus_edev, *id_edev, *charger_edev;
++	struct notifier_block vbus_nb, charger_nb, otg_nb;
++	struct work_struct charger_type_work;
++	struct delayed_work otg_work;
  
  	enum bq24192_chrgr_stat chgr_stat;
 -	enum power_supply_charger_cable_type cable_type;
  	int cc;
  	int cv;
  	int inlmt;
-@@ -305,20 +275,13 @@ struct bq24192_chip {
- 	bool sfttmr_expired;
+@@ -291,34 +263,20 @@ struct bq24192_chip {
+ 	int max_temp;
+ 	int min_temp;
+ 	int iterm;
+-	int batt_status;
+-	int bat_health;
+ 	int cntl_state;
+ 	int irq;
+-	bool is_charger_enabled;
+-	bool is_charging_enabled;
+-	bool votg;
+-	bool is_pwr_good;
+ 	bool boost_mode;
+ 	bool online;
+ 	bool present;
+-	bool sfttmr_expired;
  };
  
 -void charger_enabled_poweron();
@@ -157,7 +180,7 @@ index 841243513818..60d43d970359 100755
  static int bq24192_reg_read_modify(struct i2c_client *client, u8 reg,
  							u8 val, bool bit_set);
  
-@@ -329,101 +292,19 @@ static enum power_supply_property bq24192_usb_props[] = {
+@@ -329,115 +287,29 @@ static enum power_supply_property bq24192_usb_props[] = {
  	POWER_SUPPLY_PROP_ONLINE,
  	POWER_SUPPLY_PROP_TYPE,
  	POWER_SUPPLY_PROP_HEALTH,
@@ -258,15 +281,15 @@ index 841243513818..60d43d970359 100755
 -}
 -#endif
 -
- unsigned char volatile VbusDetach = 1;
- unsigned char vbus_Event = 0;
+-unsigned char volatile VbusDetach = 1;
+-unsigned char vbus_Event = 0;
 -#ifndef USB_NOTIFY_CALLBACK
 -extern volatile unsigned char PowerStateOk;
 -#endif
- extern volatile int Power_State;
- 
+-extern volatile int Power_State;
+-
  static void bq24192_ac_lock(void)
-@@ -431,13 +312,13 @@ static void bq24192_ac_lock(void)
+ {
  	unsigned long		flags;
  	local_irq_save(flags);
  	if(chip_extern){
@@ -282,7 +305,7 @@ index 841243513818..60d43d970359 100755
  {
  	unsigned long		flags;
  	local_irq_save(flags);
-@@ -447,10 +328,6 @@ static void bq24192_ac_unlock()
+@@ -447,19 +319,14 @@ static void bq24192_ac_unlock()
  	}
  	local_irq_restore(flags);
  }
@@ -292,8 +315,9 @@ index 841243513818..60d43d970359 100755
 -#endif
  static int bq24192_write_reg(struct i2c_client *client, u8 reg, u8 value);
  extern unsigned char cur_cable_status;
- unsigned char OtgOk = 0;
-@@ -459,7 +336,7 @@ static inline int bq24192_set_inlmt(struct bq24192_chip *chip, int inlmt);
+-unsigned char OtgOk = 0;
+ static inline int bq24192_set_inlmt(struct bq24192_chip *chip, int inlmt);
+ /*-------------------------------------------------------------------------*/
  //--------------2014-1-1----distinction sdp/dcp----------------
  static int USB_STATE,AC_STATE;
  
@@ -302,7 +326,7 @@ index 841243513818..60d43d970359 100755
  	UG31XX_NO_CABLE = 0,
  	UG31XX_USB_PC_CABLE = 1,
  	UG31XX_PAD_POWER = 2,
-@@ -491,11 +368,11 @@ static int bq24192_power_get_property(struct power_supply *psy,
+@@ -491,11 +358,11 @@ static int bq24192_power_get_property(struct power_supply *psy,
  	switch (psp)
  	{
  	case POWER_SUPPLY_PROP_ONLINE:
@@ -316,7 +340,7 @@ index 841243513818..60d43d970359 100755
  		{
  			val->intval = USB_STATE;
  		}
-@@ -505,14 +382,14 @@ static int bq24192_power_get_property(struct power_supply *psy,
+@@ -505,14 +372,14 @@ static int bq24192_power_get_property(struct power_supply *psy,
  		}
  		break;
          case POWER_SUPPLY_PROP_PRESENT:
@@ -333,7 +357,7 @@ index 841243513818..60d43d970359 100755
                  ret = bq24192_chargeric_status();
                  if (ret >= 0) {
                     val->intval = 1;
-@@ -527,12 +404,10 @@ static int bq24192_power_get_property(struct power_supply *psy,
+@@ -527,12 +394,10 @@ static int bq24192_power_get_property(struct power_supply *psy,
  	return ret;
  }
  
@@ -347,7 +371,7 @@ index 841243513818..60d43d970359 100755
  		.properties 		= bq24192_pwr_props,
  		.num_properties	= ARRAY_SIZE(bq24192_pwr_props),
  		.get_property		= bq24192_power_get_property,
-@@ -540,8 +415,6 @@ static struct power_supply bq24192_supply[] = {
+@@ -540,8 +405,6 @@ static struct power_supply bq24192_supply[] = {
  	{
  		.name			= "usb",
  		.type			= POWER_SUPPLY_TYPE_USB,
@@ -356,7 +380,7 @@ index 841243513818..60d43d970359 100755
  		.properties 		= bq24192_pwr_props,
  		.num_properties 	= ARRAY_SIZE(bq24192_pwr_props),
  		.get_property 		= bq24192_power_get_property,
-@@ -549,33 +422,38 @@ static struct power_supply bq24192_supply[] = {
+@@ -549,33 +412,38 @@ static struct power_supply bq24192_supply[] = {
  	{
  		.name = "bq24155",
  		.type = POWER_SUPPLY_TYPE_USB,
@@ -375,13 +399,14 @@ index 841243513818..60d43d970359 100755
 +};
 +
 +static struct power_supply *bq24192_supply[3];
-+
-+static unsigned char cable_status = EXTCON_NONE;
  
 -int bq24192_cable_callback(unsigned char usb_cable_state)
++static unsigned char cable_status = EXTCON_NONE;
++
 +static int bq24192_cable_callback(unsigned char usb_cable_state)
  {
- 	if(OtgOk){
+-	if(OtgOk){
++	if (chip_extern->boost_mode) {
  		cur_cable_status = UG31XX_NO_CABLE;
  		cable_status = UG31XX_NO_CABLE;
  		AC_STATE   = 0;
@@ -403,7 +428,7 @@ index 841243513818..60d43d970359 100755
  		{
                          charger_enabled_poweron();
  			if(WakeLockFlag==0){
-@@ -592,7 +470,7 @@ int bq24192_cable_callback(unsigned char usb_cable_state)
+@@ -592,7 +460,7 @@ int bq24192_cable_callback(unsigned char usb_cable_state)
  
  		}else
  		{
@@ -412,7 +437,7 @@ index 841243513818..60d43d970359 100755
  			{
                                  charger_enabled_poweron();
  				if(WakeLockFlag==0){
-@@ -606,7 +484,7 @@ int bq24192_cable_callback(unsigned char usb_cable_state)
+@@ -606,7 +474,7 @@ int bq24192_cable_callback(unsigned char usb_cable_state)
  
  				printk("%s  AC_IN  \n", __func__) ;
  
@@ -421,7 +446,7 @@ index 841243513818..60d43d970359 100755
  			{
  				if(WakeLockFlag==1){
  					 WakeLockFlag=0;
-@@ -623,24 +501,26 @@ int bq24192_cable_callback(unsigned char usb_cable_state)
+@@ -623,24 +491,26 @@ int bq24192_cable_callback(unsigned char usb_cable_state)
  				printk("%s  other condition ,  state =  %x , power source ok ? %d \n", __func__, usb_cable_state,detect_charging()) ;
  			}
  		}
@@ -457,7 +482,7 @@ index 841243513818..60d43d970359 100755
  			return ret;
  		}
  	}
-@@ -685,7 +565,7 @@ static inline int bq24192_set_vindpm(struct bq24192_chip *chip, int vindpm)
+@@ -685,7 +555,7 @@ static inline int bq24192_set_vindpm(struct bq24192_chip *chip, int vindpm)
  
  static inline int bq24192_set_boostlim(u8 lim)
  {
@@ -466,7 +491,7 @@ index 841243513818..60d43d970359 100755
  
  	dev_warn(&chip_extern->client->dev, "%s\n", __func__);
  
-@@ -699,7 +579,7 @@ static inline int bq24192_set_boostlim(u8 lim)
+@@ -699,7 +569,7 @@ static inline int bq24192_set_boostlim(u8 lim)
  
  static inline int bq24192_set_sysmin(int sysmin)
  {
@@ -475,7 +500,7 @@ index 841243513818..60d43d970359 100755
  
  	dev_warn(&chip_extern->client->dev, "%s:%d %d\n", __func__, __LINE__, sysmin);
  
-@@ -744,7 +624,7 @@ static void ChargeInit(unsigned int power_type)
+@@ -744,7 +614,7 @@ static void ChargeInit(unsigned int power_type)
  	bq24192_write_reg(chip_extern->client, BQ24192_CHRG_THRM_REGL_REG,0x73);
  
  
@@ -484,30 +509,36 @@ index 841243513818..60d43d970359 100755
  		bq24192_set_inlmt(chip_extern,1200);		//00	inlim:1200mA
  		}else{ //POWER_SUPPLY_CHARGER_TYPE_USB_SDP
  			bq24192_set_inlmt(chip_extern,500);	//00	inlim:500mA
-@@ -775,15 +655,14 @@ static void ChargeInit(unsigned int power_type)
+@@ -775,42 +645,6 @@ static void ChargeInit(unsigned int power_type)
  
  }
  
 -
 -
- static void otg_worker(struct work_struct *work)
- {
+-static void otg_worker(struct work_struct *work)
+-{
 -	int gpio_handle,gpio_data,ret;
-+	int gpio_data;
- 
- 	msleep(300);
+-
+-	msleep(300);
 -	gpio_handle = acpi_get_gpio("\\_SB.GPO2", 22);
 -	gpio_data    = __gpio_get_value(gpio_handle);
-+	/*gpio_handle = acpi_get_gpio("\\_SB.GPO2", 22);
-+	gpio_data    = __gpio_get_value(gpio_handle);*/
-+	gpio_data = gpio_get_value(360); // TODO: Stop hardcoding
- 	if((gpio_data == 0)&&(OtgOk == 0)){
- 		printk("Otg plug in\n");
- 		OtgOk = 1;
-@@ -801,15 +680,6 @@ static void otg_worker(struct work_struct *work)
- 	}
- 
- }
+-	if((gpio_data == 0)&&(OtgOk == 0)){
+-		printk("Otg plug in\n");
+-		OtgOk = 1;
+-		cur_cable_status = UG31XX_NO_CABLE;
+-		cable_status = UG31XX_NO_CABLE;
+-		bq24192_reg_read_modify(chip_extern->client,BQ24192_POWER_ON_CFG_REG,0x20, true);
+-	}
+-	else{
+-		if((gpio_data == 1)&&(OtgOk == 1))
+-		{
+-		printk("Otg plug out\n");
+-		OtgOk = 0;
+-		bq24192_reg_read_modify(chip_extern->client,BQ24192_POWER_ON_CFG_REG,0x20, false);
+-		}
+-	}
+-
+-}
 -static irqreturn_t otg_irq_thread(int irq, void *devid)
 -{
 -        // callback from USB notify
@@ -517,10 +548,11 @@ index 841243513818..60d43d970359 100755
 -{
 -	return IRQ_WAKE_THREAD;
 -}
- 
+-
  //Charge Portint Guide 2014-01-20------------------------------end
  
-@@ -824,10 +694,10 @@ void bq24192_charge_enable(int enable) {
+ static int bq24192_reg_read_modify(struct i2c_client *client, u8 reg,
+@@ -824,10 +658,10 @@ void bq24192_charge_enable(int enable) {
          }
  
  	if (enable) {
@@ -533,7 +565,7 @@ index 841243513818..60d43d970359 100755
  		bq24192_reg_read_modify(chip_extern->client,BQ24192_POWER_ON_CFG_REG,0x10, false);
  	}
  }
-@@ -853,18 +723,12 @@ static void JetiaWork(struct work_struct *work)
+@@ -853,18 +687,12 @@ static void JetiaWork(struct work_struct *work)
              goto End;
          }
  
@@ -555,7 +587,7 @@ index 841243513818..60d43d970359 100755
  
  	temp = fg_chip_get_property(POWER_SUPPLY_PROP_TEMP);
  	if((temp-oldtemp) > 0){
-@@ -934,11 +798,6 @@ static void JetiaWork(struct work_struct *work)
+@@ -934,11 +762,6 @@ static void JetiaWork(struct work_struct *work)
  			// [Webber] ----------------------------
  			break;
  	}
@@ -567,7 +599,33 @@ index 841243513818..60d43d970359 100755
  End:
  	schedule_delayed_work(&chip_extern->jeita_wrkr, 30*HZ);
  }
-@@ -1173,7 +1032,7 @@ static int check_batt_psy(struct device *dev, void *data)
+@@ -1087,25 +910,6 @@ static int bq24192_reg_read_modify(struct i2c_client *client, u8 reg,
+ 	return ret;
+ }
+ 
+-static int bq24192_reg_multi_bitset(struct i2c_client *client, u8 reg,
+-						u8 val, u8 pos, u8 len)
+-{
+-	int ret;
+-	u8 data;
+-
+-	ret = bq24192_read_reg(client, reg);
+-	if (ret < 0) {
+-		dev_warn(&client->dev, "I2C SMbus Read error:%d\n", ret);
+-		return ret;
+-	}
+-
+-	data = (1 << len) - 1;
+-	ret = (ret & ~(data << pos)) | val;
+-	ret = bq24192_write_reg(client, reg, ret);
+-
+-	return ret;
+-}
+-
+ /*
+  * This function verifies if the bq24192i charger chip is in Hi-Z
+  * If yes, then clear the Hi-Z to resume the charger operations
+@@ -1173,7 +977,7 @@ static int check_batt_psy(struct device *dev, void *data)
  	struct power_supply *psy = dev_get_drvdata(dev);
  
  	/* check for whether power supply type is battery */
@@ -576,7 +634,7 @@ index 841243513818..60d43d970359 100755
  		fg_psy = psy;
  		return 1;
  	}
-@@ -1212,7 +1071,7 @@ static int fg_chip_get_property(enum power_supply_property psp)
+@@ -1212,7 +1016,7 @@ static int fg_chip_get_property(enum power_supply_property psp)
  	if (!fg_psy)
  		fg_psy = get_fg_chip_psy();
  	if (fg_psy) {
@@ -585,7 +643,7 @@ index 841243513818..60d43d970359 100755
  		if (!ret)
  			return val.intval;
  	}
-@@ -1232,10 +1091,6 @@ int bq24192_get_charger_health(void)
+@@ -1232,10 +1036,6 @@ int bq24192_get_charger_health(void)
  
  	dev_dbg(&chip->client->dev, "%s\n", __func__);
  
@@ -596,7 +654,7 @@ index 841243513818..60d43d970359 100755
  	ret_fault = bq24192_read_reg(chip->client, BQ24192_FAULT_STAT_REG);
  	if (ret_fault < 0) {
  		dev_warn(&chip->client->dev,
-@@ -1261,58 +1116,6 @@ int bq24192_get_charger_health(void)
+@@ -1261,58 +1061,6 @@ int bq24192_get_charger_health(void)
  	return POWER_SUPPLY_HEALTH_GOOD;
  }
  
@@ -655,7 +713,7 @@ index 841243513818..60d43d970359 100755
  /***********************************************************************/
  
  /* convert the input current limit value
-@@ -1321,7 +1124,7 @@ EXPORT_SYMBOL(bq24192_get_battery_health_me176c);
+@@ -1321,7 +1069,7 @@ EXPORT_SYMBOL(bq24192_get_battery_health_me176c);
   */
  static u8 chrg_ilim_to_reg(int ilim)
  {
@@ -664,7 +722,7 @@ index 841243513818..60d43d970359 100755
  
  	/* Set the input source current limit
  	 * between 100 to 1500mA */
-@@ -1401,53 +1204,6 @@ static u8 chrg_volt_to_reg(int volt)
+@@ -1401,53 +1149,6 @@ static u8 chrg_volt_to_reg(int volt)
  	return reg;
  }
  
@@ -718,13 +776,14 @@ index 841243513818..60d43d970359 100755
  /*
   * chip->event_lock need to be acquired before calling this function
   * to avoid the race condition
-@@ -1554,193 +1310,6 @@ static int bq24192_modify_vindpm(u8 vindpm)
+@@ -1554,413 +1255,109 @@ static int bq24192_modify_vindpm(u8 vindpm)
  	return ret;
  }
  
 -/* This function should be called with the mutex held */
 -static int bq24192_turn_otg_vbus(struct bq24192_chip *chip, bool votg_on)
--{
++static inline int bq24192_set_cc(struct bq24192_chip *chip, int cc)
+ {
 -	int ret = 0;
 -
 -	dev_info(&chip->client->dev, "%s %d\n", __func__, votg_on);
@@ -789,44 +848,68 @@ index 841243513818..60d43d970359 100755
 -			/* Cancel the charger task worker now */
 -			cancel_delayed_work_sync(&chip->chrg_task_wrkr);
 -	}
--
++	u8 regval,value;
+ 
 -	/*
 -	 *  Drive the gpio to turn ON/OFF the VBUS
 -	 */
 -	if (chip->pdata->drive_vbus)
 -		chip->pdata->drive_vbus(votg_on);
--
++	dev_dbg(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, cc);
++	regval = chrg_cur_to_reg(cc);
++	value = bq24192_read_reg(chip->client, BQ24192_CHRG_CUR_CNTL_REG);
++	value = ((value&0x03)|regval);
+ 
 -	return ret;
 -i2c_write_fail:
 -	dev_err(&chip->client->dev, "%s: Failed\n", __func__);
 -	return ret;
--}
--
++	return bq24192_write_reg(chip->client, BQ24192_CHRG_CUR_CNTL_REG,
++				value);
+ }
+ 
 -#ifdef CONFIG_DEBUG_FS
 -#define DBGFS_REG_BUF_LEN	3
 -
 -static int bq24192_show(struct seq_file *seq, void *unused)
--{
++static inline int bq24192_set_cv(struct bq24192_chip *chip, int cv)
+ {
 -	u16 val;
 -	long addr;
 -
 -	if (kstrtol((char *)seq->private, 16, &addr))
 -		return -EINVAL;
--
++	u8 regval;
+ 
 -	val = bq24192_read_reg(bq24192_client, addr);
 -	seq_printf(seq, "%x\n", val);
--
++	dev_dbg(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, cv);
++	regval = chrg_volt_to_reg(cv);
+ 
 -	return 0;
--}
--
++	return bq24192_write_reg(chip->client, BQ24192_CHRG_VOLT_CNTL_REG,
++					(regval | CHRG_VOLT_CNTL_VRECHRG)|CHRG_VOLT_CNTL_BATTLOWV);
+ }
+ 
 -static int bq24192_dbgfs_open(struct inode *inode, struct file *file)
--{
++static inline int bq24192_set_inlmt(struct bq24192_chip *chip, int inlmt)
+ {
 -	return single_open(file, bq24192_show, inode->i_private);
--}
--
++	u8 regval,value;
++
++	dev_warn(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, inlmt);
++	chip->inlmt = inlmt;
++	regval = chrg_ilim_to_reg(inlmt);
++	value = bq24192_read_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG);
++	regval = ((value&0xF8)|regval);
++	return bq24192_write_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG,
++				regval);
+ }
+ 
 -static ssize_t bq24192_dbgfs_reg_write(struct file *file,
 -		const char __user *user_buf, size_t count, loff_t *ppos)
--{
++static inline int bq24192_set_iterm(struct bq24192_chip *chip, int iterm)
+ {
 -	char buf[DBGFS_REG_BUF_LEN];
 -	long addr;
 -	unsigned long value;
@@ -835,26 +918,69 @@ index 841243513818..60d43d970359 100755
 -
 -	if (!seq || kstrtol((char *)seq->private, 16, &addr))
 -		return -EINVAL;
--
++	u8 reg_val;
+ 
 -	if (copy_from_user(buf, user_buf, DBGFS_REG_BUF_LEN-1))
 -		return -EFAULT;
--
++	if (iterm > BQ24192_CHRG_ITERM_OFFSET)
++		dev_warn(&chip->client->dev,
++			"%s ITERM set for >128mA", __func__);
+ 
 -	buf[DBGFS_REG_BUF_LEN-1] = '\0';
 -	if (kstrtoul(buf, 16, &value))
 -		return -EINVAL;
--
++	reg_val = chrg_iterm_to_reg(iterm);
++	//msleep(500);
+ 
 -	dev_info(&bq24192_client->dev,
 -			"[dbgfs write] Addr:0x%x Val:0x%x\n",
 -			(u32)addr, (u32)value);
--
--
++	return bq24192_write_reg(chip->client,
++			BQ24192_PRECHRG_TERM_CUR_CNTL_REG,
++				(BQ24192_PRE_CHRG_CURR_256 | reg_val));
++}
+ 
++static inline int bq24192_get_inlmt(struct bq24192_chip *chip) {
++	u8 regval;
++        int value = 100;
+ 
 -	ret = bq24192_write_reg(bq24192_client, addr, value);
 -	if (ret < 0)
 -		dev_warn(&bq24192_client->dev, "I2C write failed\n");
--
++        regval = bq24192_read_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG);
++	regval &= 0x07;
++        switch (regval) {
++            case 0:
++               value = 100;
++               break;
++            case 1:
++               value = 150;
++               break;
++            case 2:
++               value = 500;
++               break;
++            case 3:
++               value = 900;
++               break;
++            case 4:
++               value = 1000;
++               break;
++            case 5:
++               value = 1200;
++               break;
++            case 6:
++               value = 2000;
++               break;
++            case 7:
++               value = 3000;
++               break;
++        }
++        dev_warn(&chip->client->dev, "%s:%d ,input current = %d mA\n", __func__, __LINE__, value);
+ 
 -	return count;
--}
--
++	return value;
+ }
+ 
 -static const struct file_operations bq24192_dbgfs_fops = {
 -	.owner		= THIS_MODULE,
 -	.open		= bq24192_dbgfs_open,
@@ -868,13 +994,20 @@ index 841243513818..60d43d970359 100755
 -{
 -	int i;
 -	struct dentry *entry;
--
++int bq24192_chargeric_status (void) {
++	int ret;
++	struct bq24192_chip *chip=NULL;
+ 
 -	bq24192_dbgfs_root = debugfs_create_dir(DEV_NAME, NULL);
 -	if (IS_ERR(bq24192_dbgfs_root)) {
 -		dev_warn(&chip->client->dev, "DEBUGFS DIR create failed\n");
 -		return -ENOMEM;
--	}
--
++	chip = chip_extern;
++	if((chip->client == NULL)||(chip == NULL)) {
++		printk("chip->client == null\n");
++		return -1;
+ 	}
+ 
 -	for (i = 0; i < BQ24192_MAX_MEM; i++) {
 -		sprintf((char *)&bq24192_dbg_regs[i], "%x", i);
 -		entry = debugfs_create_file(
@@ -909,44 +1042,233 @@ index 841243513818..60d43d970359 100755
 -}
 -#endif
 -
- static inline int bq24192_enable_charging(
- 			struct bq24192_chip *chip, bool val)
- {
-@@ -1772,6 +1341,7 @@ static inline int bq24192_enable_charging(
- 		return ret;
- 	}
- 
-+#if 0
- 	/*
- 	 * check if we have the battery emulator connected. We do not start
- 	 * charging if the emulator is connected. Disable the charging
-@@ -1788,6 +1358,7 @@ static inline int bq24192_enable_charging(
- 						0);
- 		return ret;
- 	}
-+#endif
- 
- 	if (val) {
- 		/* Schedule the charger task worker now */
-@@ -1862,7 +1433,7 @@ static inline int bq24192_set_cc(struct bq24192_chip *chip, int cc)
- {
- 	u8 regval,value;
- 
+-static inline int bq24192_enable_charging(
+-			struct bq24192_chip *chip, bool val)
+-{
+-	int ret;
+-	u8 regval;
+-
+-	dev_warn(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, val);
+-
+-	ret = program_timers(chip, CHRG_TIMER_EXP_CNTL_WDT160SEC, true);
+-	if (ret < 0) {
+-		dev_err(&chip->client->dev,
+-				"program_timers failed: %d\n", ret);
+-		return ret;
+-	}
+-
+-	/*
+-	 * Program the inlmt here in case we are asked to resume the charging
+-	 * framework would send only set CC/CV commands and not the inlmt. This
+-	 * would make sure that we program the last set inlmt into the register
+-	 * in case for some reasons WDT expires
+-	 */
+-	regval = chrg_ilim_to_reg(chip->inlmt);
+-
+-	ret = bq24192_reg_read_modify(chip->client, BQ24192_INPUT_SRC_CNTL_REG,
+-				regval, true);
+-	if (ret < 0) {
+-		dev_err(&chip->client->dev,
+-				"inlmt programming failed: %d\n", ret);
+-		return ret;
+-	}
+-
+-	/*
+-	 * check if we have the battery emulator connected. We do not start
+-	 * charging if the emulator is connected. Disable the charging
+-	 * explicitly.
+-	 */
+-	if (!chip->pdata->sfi_tabl_present) {
+-		ret = bq24192_reg_multi_bitset(chip->client,
+-						BQ24192_POWER_ON_CFG_REG,
+-						POWER_ON_CFG_CHRG_CFG_DIS,
+-						CHR_CFG_BIT_POS,
+-						CHR_CFG_BIT_LEN);
+-		/* Schedule the charger task worker now */
+-		schedule_delayed_work(&chip->chrg_task_wrkr,
+-						0);
+-		return ret;
+-	}
+-
+-	if (val) {
+-		/* Schedule the charger task worker now */
+-		schedule_delayed_work(&chip->chrg_task_wrkr, 0);
+-
+-		/*
+-		 * Prevent system from entering s3 while charger is connected
+-		 */
+-		if (!wake_lock_active(&chip->wakelock))
+-			wake_lock(&chip->wakelock);
+-	} else {
+-		/* Release the wake lock */
+-		if (wake_lock_active(&chip->wakelock))
+-			wake_unlock(&chip->wakelock);
+-
+-		/*
+-		 * Cancel the worker since it need not run when charging is not
+-		 * happening
+-		 */
+-		cancel_delayed_work_sync(&chip->chrg_full_wrkr);
+-
+-		/* Read the status to know about input supply */
+-		ret = bq24192_read_reg(chip->client, BQ24192_SYSTEM_STAT_REG);
+-		if (ret < 0) {
+-			dev_warn(&chip->client->dev,
+-				"read reg failed %s\n", __func__);
+-		}
+-
+-		/* If no charger connected, cancel the workers */
+-		if (!(ret & SYSTEM_STAT_VBUS_OTG)) {
+-			dev_info(&chip->client->dev, "NO charger connected\n");
+-			chip->sfttmr_expired = false;
+-			cancel_delayed_work_sync(&chip->chrg_task_wrkr);
+-		}
+-	}
+-
+-	ret = val ? POWER_ON_CFG_CHRG_CFG_EN : POWER_ON_CFG_CHRG_CFG_DIS;
+-
+-	if (!val && chip->sfttmr_expired)
+-		return ret;
+-
+-	ret = bq24192_reg_multi_bitset(chip->client,
+-					BQ24192_POWER_ON_CFG_REG,
+-					ret, CHR_CFG_BIT_POS,
+-					CHR_CFG_BIT_LEN);
+-
+-	return ret;
+-}
+-
+-static inline int bq24192_enable_charger(
+-			struct bq24192_chip *chip, int val)
+-{
+-	int ret;
+-
+-	/*stop charger for throttle state 3, by putting it in HiZ mode*/
+-	if (chip->cntl_state == 0x3) {
+-		ret = bq24192_reg_read_modify(chip->client,
+-			BQ24192_INPUT_SRC_CNTL_REG,
+-				INPUT_SRC_CNTL_EN_HIZ, true);
+-
+-		if (ret < 0)
+-			dev_warn(&chip->client->dev,
+-				"Input src cntl write failed\n");
+-	}
+-
+-	dev_warn(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, val);
+-
+-	return bq24192_enable_charging(chip, val);
+-}
+-
+-static inline int bq24192_set_cc(struct bq24192_chip *chip, int cc)
+-{
+-	u8 regval,value;
+-
 -	dev_warn(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, cc);
-+	dev_dbg(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, cc);
- 	regval = chrg_cur_to_reg(cc);
- 	value = bq24192_read_reg(chip->client, BQ24192_CHRG_CUR_CNTL_REG);
- 	value = ((value&0x03)|regval);
-@@ -1875,7 +1446,7 @@ static inline int bq24192_set_cv(struct bq24192_chip *chip, int cv)
- {
- 	u8 regval;
- 
+-	regval = chrg_cur_to_reg(cc);
+-	value = bq24192_read_reg(chip->client, BQ24192_CHRG_CUR_CNTL_REG);
+-	value = ((value&0x03)|regval);
+-
+-	return bq24192_write_reg(chip->client, BQ24192_CHRG_CUR_CNTL_REG,
+-				value);
+-}
+-
+-static inline int bq24192_set_cv(struct bq24192_chip *chip, int cv)
+-{
+-	u8 regval;
+-
 -	dev_warn(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, cv);
-+	dev_dbg(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, cv);
- 	regval = chrg_volt_to_reg(cv);
+-	regval = chrg_volt_to_reg(cv);
+-
+-	return bq24192_write_reg(chip->client, BQ24192_CHRG_VOLT_CNTL_REG,
+-					(regval | CHRG_VOLT_CNTL_VRECHRG)|CHRG_VOLT_CNTL_BATTLOWV);
+-}
+-
+-static inline int bq24192_set_inlmt(struct bq24192_chip *chip, int inlmt)
+-{
+-	u8 regval,value;
+-
+-	dev_warn(&chip->client->dev, "%s:%d %d\n", __func__, __LINE__, inlmt);
+-	chip->inlmt = inlmt;
+-	regval = chrg_ilim_to_reg(inlmt);
+-	value = bq24192_read_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG);
+-	regval = ((value&0xF8)|regval);
+-	return bq24192_write_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG,
+-				regval);
+-}
+-
+-static inline int bq24192_set_iterm(struct bq24192_chip *chip, int iterm)
+-{
+-	u8 reg_val;
+-
+-	if (iterm > BQ24192_CHRG_ITERM_OFFSET)
+-		dev_warn(&chip->client->dev,
+-			"%s ITERM set for >128mA", __func__);
+-
+-	reg_val = chrg_iterm_to_reg(iterm);
+-	//msleep(500);
+-
+-	return bq24192_write_reg(chip->client,
+-			BQ24192_PRECHRG_TERM_CUR_CNTL_REG,
+-				(BQ24192_PRE_CHRG_CURR_256 | reg_val));
+-}
+-
+-static inline int bq24192_get_inlmt(struct bq24192_chip *chip) {
+-	u8 regval;
+-        int value = 100;
+-
+-        regval = bq24192_read_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG);
+-	regval &= 0x07;
+-        switch (regval) {
+-            case 0:
+-               value = 100;
+-               break;
+-            case 1:
+-               value = 150;
+-               break;
+-            case 2:
+-               value = 500;
+-               break;
+-            case 3:
+-               value = 900;
+-               break;
+-            case 4:
+-               value = 1000;
+-               break;
+-            case 5:
+-               value = 1200;
+-               break;
+-            case 6:
+-               value = 2000;
+-               break;
+-            case 7:
+-               value = 3000;
+-               break;
+-        }
+-        dev_warn(&chip->client->dev, "%s:%d ,input current = %d mA\n", __func__, __LINE__, value);
+-
+-	return value;
+-}
+-
+-int bq24192_chargeric_status (void) {
+-	int ret;
+-	struct bq24192_chip *chip=NULL;
+-
+-	chip = chip_extern;
+-	if((chip->client == NULL)||(chip == NULL)) {
+-		printk("chip->client == null\n");
+-		return -1;
+-	}
+-
+-        mutex_lock(&chip_extern->event_lock);
+-	ret = bq24192_read_reg(chip->client, BQ24192_SYSTEM_STAT_REG);
+-        mutex_unlock(&chip_extern->event_lock);
++        mutex_lock(&chip_extern->event_lock);
++	ret = bq24192_read_reg(chip->client, BQ24192_SYSTEM_STAT_REG);
++        mutex_unlock(&chip_extern->event_lock);
  
- 	return bq24192_write_reg(chip->client, BQ24192_CHRG_VOLT_CNTL_REG,
-@@ -2003,12 +1574,10 @@ int bq24192_is_charging(void)
+ 	if (ret < 0)
+ 		dev_err(&chip->client->dev, "STATUS register read failed\n");
+@@ -2003,12 +1400,10 @@ int bq24192_is_charging(void)
  
  	return chip->chgr_stat;
  }
@@ -959,7 +1281,7 @@ index 841243513818..60d43d970359 100755
  	int ret;
  	struct bq24192_chip *chip=NULL;
  
-@@ -2025,14 +1594,14 @@ bool detect_charging(void)
+@@ -2025,14 +1420,14 @@ bool detect_charging(void)
  
  	ret &= SYSTEM_STAT_PWR_GOOD;
  
@@ -977,7 +1299,7 @@ index 841243513818..60d43d970359 100755
  		return (false);
  	}
  
-@@ -2044,9 +1613,7 @@ static int bq24192_usb_set_property(struct power_supply *psy,
+@@ -2044,9 +1439,7 @@ static int bq24192_usb_set_property(struct power_supply *psy,
  					enum power_supply_property psp,
  					const union power_supply_propval *val)
  {
@@ -988,7 +1310,7 @@ index 841243513818..60d43d970359 100755
  	int ret = 0;
  
  	dev_dbg(&chip->client->dev, "%s %d\n", __func__, psp);
-@@ -2065,64 +1632,31 @@ static int bq24192_usb_set_property(struct power_supply *psy,
+@@ -2065,64 +1458,31 @@ static int bq24192_usb_set_property(struct power_supply *psy,
  	case POWER_SUPPLY_PROP_ONLINE:
  		chip->online = val->intval;
  		break;
@@ -1060,7 +1382,7 @@ index 841243513818..60d43d970359 100755
  		chip->min_temp = val->intval;
  		break;
  	case POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT:
-@@ -2140,10 +1674,7 @@ static int bq24192_usb_get_property(struct power_supply *psy,
+@@ -2140,10 +1500,7 @@ static int bq24192_usb_get_property(struct power_supply *psy,
  			enum power_supply_property psp,
  			union power_supply_propval *val)
  {
@@ -1072,7 +1394,7 @@ index 841243513818..60d43d970359 100755
  
  	dev_dbg(&chip->client->dev, "%s %d\n", __func__, psp);
  	if (system_state != SYSTEM_RUNNING) {
-@@ -2162,48 +1693,31 @@ static int bq24192_usb_get_property(struct power_supply *psy,
+@@ -2162,48 +1519,31 @@ static int bq24192_usb_get_property(struct power_supply *psy,
  	case POWER_SUPPLY_PROP_HEALTH:
  		val->intval = bq24192_get_charger_health();
  		break;
@@ -1129,7 +1451,7 @@ index 841243513818..60d43d970359 100755
  		val->intval = chip->min_temp;
  		break;
  	default:
-@@ -2215,20 +1729,6 @@ static int bq24192_usb_get_property(struct power_supply *psy,
+@@ -2215,20 +1555,6 @@ static int bq24192_usb_get_property(struct power_supply *psy,
  	return 0;
  }
  
@@ -1150,7 +1472,7 @@ index 841243513818..60d43d970359 100755
  static void bq24192_full_worker(struct work_struct *work)
  {
  	struct bq24192_chip *chip = container_of(work,
-@@ -2240,7 +1740,7 @@ static void bq24192_full_worker(struct work_struct *work)
+@@ -2240,7 +1566,7 @@ static void bq24192_full_worker(struct work_struct *work)
  	if(count == 4){
  		count = 0;
  		ret = bq24192_read_reg(chip_extern->client, BQ24192_INPUT_SRC_CNTL_REG);
@@ -1159,28 +1481,29 @@ index 841243513818..60d43d970359 100755
  	}
  	//power_supply_changed(NULL);
  	reset_wdt_timer(chip_extern);
-@@ -2248,16 +1748,18 @@ static void bq24192_full_worker(struct work_struct *work)
+@@ -2248,17 +1574,6 @@ static void bq24192_full_worker(struct work_struct *work)
  	schedule_delayed_work(&chip->chrg_full_wrkr, 30*HZ);
  }
  
-+/*
- static void otg_disable_worker(struct work_struct *work)
- {
-+	int ret = 0;
- 	printk("otg_resume_enable\n");
+-static void otg_disable_worker(struct work_struct *work)
+-{
+-	printk("otg_resume_enable\n");
 -	int ret=0;
- 	ret=bq24192_reg_read_modify(chip_extern->client,
- 		                 BQ24192_POWER_ON_CFG_REG,0x20, true);
-     if (ret < 0) {
- 		 printk("Error in writing the control register BQ24192_POWER_ON_CFG_REG\n");
- 	}
- }
-+*/
- 
+-	ret=bq24192_reg_read_modify(chip_extern->client,
+-		                 BQ24192_POWER_ON_CFG_REG,0x20, true);
+-    if (ret < 0) {
+-		 printk("Error in writing the control register BQ24192_POWER_ON_CFG_REG\n");
+-	}
+-}
+-
  /* IRQ handler for charger Interrupts configured to GPIO pin */
  static irqreturn_t bq24192_irq_isr(int irq, void *devid)
-@@ -2299,11 +1801,11 @@ static irqreturn_t bq24192_irq_thread(int irq, void *devid)
- 	   //schedule_delayed_work(&chip->otg_disable_wrkr, 5);
+ {
+@@ -2296,14 +1611,13 @@ static irqreturn_t bq24192_irq_thread(int irq, void *devid)
+         if (ret < 0) {
+ 		 printk("Error in writing the control register\n");
+ 		}
+-	   //schedule_delayed_work(&chip->otg_disable_wrkr, 5);
         printk("bq24192 otg fault\n");
  	}
 -	dev_info(&chip->client->dev, "FAULT reg %x\n", reg_fault);
@@ -1193,7 +1516,7 @@ index 841243513818..60d43d970359 100755
  	/*
  	 * check the bq24192 status/fault registers to see what is the
  	 * source of the interrupt
-@@ -2311,10 +1813,10 @@ static irqreturn_t bq24192_irq_thread(int irq, void *devid)
+@@ -2311,10 +1625,10 @@ static irqreturn_t bq24192_irq_thread(int irq, void *devid)
  	reg_status = bq24192_read_reg(chip->client, BQ24192_SYSTEM_STAT_REG);
  	if (reg_status < 0)
  		dev_err(&chip->client->dev, "STATUS register read failed:\n");
@@ -1206,7 +1529,7 @@ index 841243513818..60d43d970359 100755
  			ret = bq24192_read_reg(chip->client, BQ24192_INPUT_SRC_CNTL_REG);
  			printk("Input source: %x\n",ret);
  			bq24192_set_inlmt(chip_extern,1200);
-@@ -2323,55 +1825,11 @@ static irqreturn_t bq24192_irq_thread(int irq, void *devid)
+@@ -2323,55 +1637,11 @@ static irqreturn_t bq24192_irq_thread(int irq, void *devid)
  	return IRQ_HANDLED;
  }
  
@@ -1262,7 +1585,7 @@ index 841243513818..60d43d970359 100755
  	u8 vindpm = INPUT_SRC_VOLT_LMT_DEF;
  
  	dev_info(&chip->client->dev, "%s\n", __func__);
-@@ -2444,18 +1902,8 @@ static void bq24192_task_worker(struct work_struct *work)
+@@ -2444,18 +1714,8 @@ static void bq24192_task_worker(struct work_struct *work)
  		power_supply_changed(NULL);
  
  sched_task_work:
@@ -1282,7 +1605,7 @@ index 841243513818..60d43d970359 100755
  		dev_warn(&chip->client->dev,
  			"%s battery full", __func__);
  	}
-@@ -2463,532 +1911,8 @@ static void bq24192_task_worker(struct work_struct *work)
+@@ -2463,651 +1723,139 @@ static void bq24192_task_worker(struct work_struct *work)
  	schedule_delayed_work(&chip->chrg_task_wrkr, jiffy);
  }
  
@@ -1339,7 +1662,8 @@ index 841243513818..60d43d970359 100755
 -			"Fault status read failed: %d\n", fault_reg);
 -		goto temp_wrkr_error;
 -	}
--
++extern int intel_mid_pmic_writeb(int reg, u8 val);
+ 
 -	fg_temp = fg_chip_get_property(POWER_SUPPLY_PROP_TEMP);
 -	if (fg_temp == -ENODEV || fg_temp == -EINVAL) {
 -		dev_err(&chip->client->dev,
@@ -1355,7 +1679,9 @@ index 841243513818..60d43d970359 100755
 -		goto temp_wrkr_error;
 -	}
 -	fg_temp = fg_temp/10;
--
++void charger_enabled_poweron() {
++       int ret = 0;
+ 
 -	if (fg_temp >= chip->pdata->max_temp
 -		|| fg_temp <= chip->pdata->min_temp) {
 -		if (!is_otp_notified) {
@@ -1373,8 +1699,13 @@ index 841243513818..60d43d970359 100755
 -			"Battery over temp recovered!!!!\n");
 -		power_supply_changed(&chip->usb);
 -		/*Return without reschedule as over temp recovered*/
--		return;
--	}
++        mutex_lock(&chip_extern->event_lock);
++	ret=bq24192_reg_read_modify(chip_extern->client, BQ24192_INPUT_SRC_CNTL_REG,0x80,false);
++	if (ret < 0) {
++		mutex_unlock(&chip_extern->event_lock);
++		printk("Error in writing the control register\n");
+ 		return;
+ 	}
 -	schedule_delayed_work(&chip->chrg_temp_wrkr, TEMP_THREAD_JIFFIES);
 -	return;
 -
@@ -1383,7 +1714,8 @@ index 841243513818..60d43d970359 100755
 -	return;
 -}
 -
--
++	mutex_unlock(&chip_extern->event_lock);
+ 
 -static int otg_handle_notification(struct notifier_block *nb,
 -				   unsigned long event, void *param)
 -{
@@ -1416,7 +1748,14 @@ index 841243513818..60d43d970359 100755
 -		dev_err(&chip->client->dev,
 -			"failed to allocate memory for OTG event\n");
 -		return NOTIFY_DONE;
--	}
++	mutex_lock(&chip_extern->event_lock);
++	ret=bq24192_reg_read_modify(chip_extern->client,
++	BQ24192_POWER_ON_CFG_REG,0x10, true);
++	if (ret < 0) {
++		mutex_unlock(&chip_extern->event_lock);
++		printk("Error in writing the control register\n");
++		 return;
+ 	}
 -
 -	evt->is_enable = *(bool *)param;
 -	dev_info(&chip->client->dev, "evt->is_enable is %d\n", evt->is_enable);
@@ -1428,22 +1767,51 @@ index 841243513818..60d43d970359 100755
 -
 -	queue_work(system_nrt_wq, &chip->otg_evt_work);
 -	return NOTIFY_OK;
--}
--
++	mutex_unlock(&chip_extern->event_lock);
+ }
+ 
 -static inline int register_otg_notification(struct bq24192_chip *chip)
 -{
--
++static struct power_supply_desc bq24192_usb_desc = {
++	.name = CHARGER_PS_NAME,
++	.type = POWER_SUPPLY_TYPE_USB,
++	.properties = bq24192_usb_props,
++	.num_properties = ARRAY_SIZE(bq24192_usb_props),
++	.get_property = bq24192_usb_get_property,
++	.set_property = bq24192_usb_set_property,
++};
+ 
 -	int retval;
--
++static char *bq24192_supplied_to[] = {
++	"battery",
++};
+ 
 -	INIT_LIST_HEAD(&chip->otg_queue);
 -	INIT_WORK(&chip->otg_evt_work, bq24192_otg_evt_worker);
 -	spin_lock_init(&chip->otg_queue_lock);
--
++static int bq24192_vbus_notifier(struct notifier_block *nb,
++	unsigned long event, void *ptr)
++{
++	struct bq24192_chip *chip = container_of(nb, struct bq24192_chip, vbus_nb);
+ 
 -	chip->otg_nb.notifier_call = otg_handle_notification;
--
--	/*
++	if (event && chip->boost_mode) {
++		/*
++		 * VBUS may trigger when in OTG boost mode.
++		 * This is incorrect, so cancel the event since running
++		 * charger detection would be pointless.
++		 */
++		return NOTIFY_BAD;
++	}
+ 
+ 	/*
 -	 * Get the USB transceiver instance
--	 */
++	 * When power source is removed from the OTG adapter,
++	 * we need to enable the OTG boost to power it from battery.
++	 *
++	 * TODO: Right now, the USB devices are disconnected for a short moment.
++	 *   This could be only avoided by enabling OTG boost all the time..
+ 	 */
 -	chip->transceiver = usb_get_phy(USB_PHY_TYPE_USB2);
 -	if (!chip->transceiver) {
 -		dev_err(&chip->client->dev, "Failed to get the USB transceiver\n");
@@ -1482,14 +1850,18 @@ index 841243513818..60d43d970359 100755
 -	ret = bq24192_enable_charging(chip, true);
 -	if (ret < 0)
 -		dev_err(&chip->client->dev, "charge enable failed\n");
--
++	 if (!event && !chip->boost_mode)
++		 schedule_delayed_work(&chip->otg_work, msecs_to_jiffies(100));
+ 
 -	mutex_unlock(&chip->event_lock);
 -	return ret;
--}
++	return NOTIFY_DONE;
+ }
 -EXPORT_SYMBOL(bq24192_slave_mode_enable_charging);
--
+ 
 -int bq24192_slave_mode_disable_charging(void)
--{
++static void bq24192_update_charger_state(struct work_struct *work)
+ {
 -	struct bq24192_chip *chip = i2c_get_clientdata(bq24192_client);
 -	int ret;
 -
@@ -1497,10 +1869,19 @@ index 841243513818..60d43d970359 100755
 -	ret = bq24192_enable_charging(chip, false);
 -	if (ret < 0)
 -		dev_err(&chip->client->dev, "charge enable failed\n");
--
++	struct bq24192_chip *chip = container_of(work,
++									struct bq24192_chip, charger_type_work);
+ 
 -	mutex_unlock(&chip->event_lock);
 -	return ret;
--}
++	if (extcon_get_state(chip->charger_edev, EXTCON_CHG_USB_DCP) == 1) {
++		bq24192_cable_callback(EXTCON_CHG_USB_DCP);
++	} else if (extcon_get_state(chip->charger_edev, EXTCON_CHG_USB_SDP) == 1) {
++		bq24192_cable_callback(EXTCON_CHG_USB_SDP);
++	} else {
++		bq24192_cable_callback(EXTCON_NONE);
++	}
+ }
 -//--------------------------------------------------------------------
 -/* show mode entry (auto, none, host, dedicated or boost) */
 -static ssize_t bq2415x_sysfs_show_mode(struct device *dev,
@@ -1508,7 +1889,7 @@ index 841243513818..60d43d970359 100755
 -				       char *buf)
 -{
 -	ssize_t ret = 0;
--
+ 
 -	switch(g_charger_mode){
 -	case 0:
 -		ret += sprintf(buf+ret, "off");
@@ -1527,7 +1908,9 @@ index 841243513818..60d43d970359 100755
 -				      struct device_attribute *attr,
 -				      const char *buf,
 -				      size_t count)
--{
++static int bq24192_charger_notifier(struct notifier_block *nb,
++	unsigned long event, void *ptr)
+ {
 -	int ret = 0;
 -	if (strncmp(buf, "off", 3) == 0){
 -
@@ -1663,14 +2046,19 @@ index 841243513818..60d43d970359 100755
 -	power_supply_changed(&bq24192_supply[PWR_SUPPLY_bq21455]);
 -
 -	return count;
--}
--
++	struct bq24192_chip *chip = container_of(nb,
++									struct bq24192_chip, charger_nb);
++	schedule_work(&chip->charger_type_work);
++	return NOTIFY_OK;
+ }
+ 
 -/* close ac suspend mode */
 -static ssize_t bq2415x_sysfs_set_ac_suspend_mode(struct device *dev,
 -				       struct device_attribute *attr,
 -				       const char *buf,
 -				       size_t count)//lambert
--{
++static void bq24192_otg_boost(struct bq24192_chip *chip, bool enable)
+ {
 -	int ret=0;
 -#ifndef USB_NOTIFY_CALLBACK
 -	if (strncmp(buf, "close", 5) == 0)
@@ -1700,7 +2088,9 @@ index 841243513818..60d43d970359 100755
 -		}
 -		chip_extern->is_charging_enabled=true;
 -		mutex_unlock(&chip_extern->event_lock);
--
++	if (chip->boost_mode == enable)
++		return;
+ 
 -		int type;
 -		if((!VbusDetach)&&(!OtgOk)){
 -			type = GetPowerState();
@@ -1741,7 +2131,8 @@ index 841243513818..60d43d970359 100755
 -		        bq24192_write_reg(bq24192_client, BQ24192_INPUT_SRC_CNTL_REG, 0x32);
 -			   g_charger_mode=-1;
 -		   }
--
++	dev_info(&chip->client->dev, "Update OTG boost: %d\n", enable);
+ 
 -		}
 -        else{
 -			if(WakeLockFlag==1){
@@ -1762,13 +2153,17 @@ index 841243513818..60d43d970359 100755
 -	}
 -#endif
 -	return count;
--}
--
++	bq24192_reg_read_modify(chip->client,
++			BQ24192_POWER_ON_CFG_REG, 0x20, enable);
++	chip->boost_mode = enable;
+ }
+ 
 -
 -static ssize_t bq2415x_sysfs_show_ac_suspend_mode(struct device *dev,
 -					struct device_attribute *attr,
 -					char *buf)
--{
++static void bq24192_update_otg_state(struct work_struct *work)
+ {
 -	ssize_t ret = 0;
 -    printk("xia2:g_charger_mode=%d,suspend_flag=%d\n",g_charger_mode,suspend_flag);
 -	if(suspend_flag==1) ret += sprintf(buf+ret, "close");
@@ -1782,12 +2177,16 @@ index 841243513818..60d43d970359 100755
 -		bq2415x_sysfs_show_ac_suspend_mode, bq2415x_sysfs_set_ac_suspend_mode);
 -static DEVICE_ATTR(mode, S_IRWXU |S_IRWXG ,
 -		bq2415x_sysfs_show_mode, bq2415x_sysfs_set_mode);
--
++	struct bq24192_chip *chip = container_of(work,
++									struct bq24192_chip, otg_work.work);
+ 
 -static struct attribute *bq2415x_sysfs_attributes[] = {
--	/*
+ 	/*
 -	 * TODO: some (appropriate) of these attrs should be switched to
 -	 * use power supply class props.
--	 */
++	 * Enable 5V boost for OTG if host mode is activated
++	 * and there is no charger/power source inserted.
+ 	 */
 -	&dev_attr_ac_suspend_mode.attr,
 -	&dev_attr_mode.attr,
 -	NULL,
@@ -1801,25 +2200,50 @@ index 841243513818..60d43d970359 100755
 -{
 -	return sysfs_create_group(&bq24192_supply[2].dev->kobj,
 -			&bq2415x_sysfs_attr_group);
--}
--
++	bq24192_otg_boost(chip,
++		extcon_get_state(chip->id_edev, EXTCON_USB_HOST) == 1
++			&& !extcon_get_state(chip->vbus_edev, EXTCON_USB));
+ }
+ 
 -static void bq2415x_sysfs_exit(void)
--{
++static int bq24192_otg_notifier(struct notifier_block *nb,
++	unsigned long event, void *ptr)
+ {
 -	sysfs_remove_group(&bq24192_supply[2].dev->kobj, &bq2415x_sysfs_attr_group);
--}
++	struct bq24192_chip *chip = container_of(nb, struct bq24192_chip, otg_nb);
++	schedule_delayed_work(&chip->otg_work, msecs_to_jiffies(300));
++	return NOTIFY_DONE;
+ }
 -//--------------------------------------------------------------------
- extern int intel_mid_pmic_writeb(int reg, u8 val);
+-extern int intel_mid_pmic_writeb(int reg, u8 val);
 -static int g_usb_state;
 -struct workqueue_struct *charger_work_queue = NULL;
 -struct delayed_work charger_work;
-+static int g_usb_state = 0;
  
- void charger_enabled_poweron() {
-        int ret = 0;
-@@ -3014,100 +1938,39 @@ void charger_enabled_poweron() {
- 	mutex_unlock(&chip_extern->event_lock);
- }
- 
+-void charger_enabled_poweron() {
+-       int ret = 0;
+-
+-        mutex_lock(&chip_extern->event_lock);
+-	ret=bq24192_reg_read_modify(chip_extern->client, BQ24192_INPUT_SRC_CNTL_REG,0x80,false);
+-	if (ret < 0) {
+-		mutex_unlock(&chip_extern->event_lock);
+-		printk("Error in writing the control register\n");
+-		return;
+-	}
+-	mutex_unlock(&chip_extern->event_lock);
+-
+-	mutex_lock(&chip_extern->event_lock);
+-	ret=bq24192_reg_read_modify(chip_extern->client,
+-	BQ24192_POWER_ON_CFG_REG,0x10, true);
+-	if (ret < 0) {
+-		mutex_unlock(&chip_extern->event_lock);
+-		printk("Error in writing the control register\n");
+-		 return;
+-	}
+-	chip_extern->is_charging_enabled = true;
+-	mutex_unlock(&chip_extern->event_lock);
+-}
+-
 -static void do_charger(struct work_struct *work) {
 -        bq24192_cable_callback(g_usb_state);
 -}
@@ -1829,20 +2253,13 @@ index 841243513818..60d43d970359 100755
 -        queue_delayed_work(charger_work_queue, &charger_work, 0);
 -
 -	return 0;
-+void bq24192_notify_cable_type(int usb_state) {
-+	if (chip_extern) {
-+		bq24192_cable_callback(usb_state);
-+	} else {
-+		// We might not be initialized when this is called
-+		g_usb_state = usb_state;
-+	}
- }
+-}
 -#ifdef USB_NOTIFY_CALLBACK
 -extern unsigned int query_cable_status(void);
 -
 -
 -static int cable_status_notify(struct notifier_block *self, unsigned long action, void *dev) {
- 
+-
 -/*
 -   if (ischargerSuspend) {
 -       printk(KERN_INFO "%s chager is suspend but USB still notify !!!\n", __func__);
@@ -1899,21 +2316,11 @@ index 841243513818..60d43d970359 100755
 -   }
 -   return NOTIFY_OK;
 -}
-+static struct power_supply_desc bq24192_usb_desc = {
-+	.name = CHARGER_PS_NAME,
-+	.type = POWER_SUPPLY_TYPE_USB,
-+	.properties = bq24192_usb_props,
-+	.num_properties = ARRAY_SIZE(bq24192_usb_props),
-+	.get_property = bq24192_usb_get_property,
-+	.set_property = bq24192_usb_set_property,
-+};
- 
+-
 -static struct notifier_block cable_status_notifier = {
 -	.notifier_call = cable_status_notify,
-+static char *bq24192_supplied_to[] = {
-+	"battery",
- };
- 
+-};
+-
 -extern int cable_status_register_client(struct notifier_block *nb);
 -extern int cable_status_unregister_client(struct notifier_block *nb);
 -#endif
@@ -1932,14 +2339,14 @@ index 841243513818..60d43d970359 100755
 -		return -EFAULT;
 -	}
 +	struct power_supply_config usb_config;
-+	int ret,gpio_data;
++	int ret;
  
 -	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE_DATA)) {
 +	if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA)) {
  		dev_err(&client->dev,
  				"SMBus doesn't support BYTE transactions\n");
  		return -EIO;
-@@ -3119,7 +1982,6 @@ static int bq24192_probe(struct i2c_client *client,
+@@ -3119,7 +1867,6 @@ static int bq24192_probe(struct i2c_client *client,
  		return -ENOMEM;
  	}
  
@@ -1947,7 +2354,7 @@ index 841243513818..60d43d970359 100755
  	/*assigning default value for min and max temp*/
  	chip->min_temp = BATT_TEMP_MIN_DEF;
  	chip->max_temp = BATT_TEMP_MAX_DEF;
-@@ -3146,26 +2008,14 @@ static int bq24192_probe(struct i2c_client *client,
+@@ -3146,26 +1893,14 @@ static int bq24192_probe(struct i2c_client *client,
  	chip_extern = chip;
  	chip->client = client;
  
@@ -1977,7 +2384,7 @@ index 841243513818..60d43d970359 100755
  		if (chip->irq < 0) {
  			dev_err(&chip->client->dev,
  				"chgr_int_n GPIO is not available\n");
-@@ -3189,24 +2039,13 @@ static int bq24192_probe(struct i2c_client *client,
+@@ -3189,47 +1924,41 @@ static int bq24192_probe(struct i2c_client *client,
  	intel_mid_pmic_writeb(R_PMIC_MIRQS0,0x00);
  	intel_mid_pmic_writeb(R_PMIC_MIRQSX,0x00);
  
@@ -1994,27 +2401,53 @@ index 841243513818..60d43d970359 100755
 -	if(ret)
 -		printk("failed to register irq for pin %d\n",irq);
 -#endif
-+	INIT_DELAYED_WORK(&chip->otg_wrkr, otg_worker); // TODO
++	/*
++	 * Get extcon devices (might as well hard-code since this driver is
++	 * too bad to be used anywhere else...)
++	 */
++	chip->vbus_edev = extcon_get_extcon_dev("crystal_cove_pwrsrc");
++	if (!chip->vbus_edev) {
++		dev_err(&client->dev, "VBUS extcon device does not exist\n");
++		return -ENODEV;
++	}
++	if (IS_ERR(chip->vbus_edev))
++		return PTR_ERR(chip->vbus_edev);
  
 -	ChargeInit(POWER_SUPPLY_CHARGER_TYPE_USB_SDP);
-+	ChargeInit(EXTCON_CHG_USB_SDP);
++	chip->id_edev = extcon_get_extcon_dev("INT3496:00");
++	if (!chip->id_edev) {
++		dev_err(&client->dev, "ID extcon device does not exist\n");
++		return -ENODEV;
++	}
++	if (IS_ERR(chip->id_edev))
++		return PTR_ERR(chip->id_edev);
  
 -	gpio_handle = acpi_get_gpio("\\_SB.GPO2", 22);//OTG function
 -	gpio_data = __gpio_get_value(gpio_handle);
-+	/*gpio_handle = acpi_get_gpio("\\_SB.GPO2", 22);//OTG function
-+	gpio_data = __gpio_get_value(gpio_handle);*/
-+	gpio_data = gpio_get_value(360); // TODO: Stop hardcoding
- 	printk("OTG_ID:%d\n",gpio_data);
- 	if(gpio_data == 0){
- 		printk("[%s] Otg plug in !! \n",__func__);
-@@ -3220,16 +2059,10 @@ static int bq24192_probe(struct i2c_client *client,
+-	printk("OTG_ID:%d\n",gpio_data);
+-	if(gpio_data == 0){
+-		printk("[%s] Otg plug in !! \n",__func__);
+-		 OtgOk = 1;
+-		 bq24192_reg_read_modify(chip->client,BQ24192_POWER_ON_CFG_REG,0x20, true);
+-	}else{
+-		printk("[%s] OTG plug out !! \n",__func__);
+-		OtgOk = 0;
+-		bq24192_reg_read_modify(chip->client,BQ24192_POWER_ON_CFG_REG,0x20, false);
++	chip->charger_edev = extcon_get_extcon_dev("phy-dwc3.1.auto.ulpi.0");
++	if (!chip->charger_edev) {
++		dev_err(&client->dev, "Charger extcon device does not exist\n");
++		return -ENODEV;
+ 	}
++	if (IS_ERR(chip->charger_edev))
++		return PTR_ERR(chip->charger_edev);
++
++	ChargeInit(EXTCON_CHG_USB_SDP);
  
  	INIT_DELAYED_WORK(&chip->chrg_full_wrkr, bq24192_full_worker);
  	INIT_DELAYED_WORK(&chip->chrg_task_wrkr, bq24192_task_worker);
 -	INIT_DELAYED_WORK(&chip->power_state_task_wrkr, bq24192_PowerState_worker);
  	INIT_DELAYED_WORK(&chip->jeita_wrkr, JetiaWork);
 -	INIT_DELAYED_WORK(&chip->otg_disable_wrkr, otg_disable_worker);
-+	//INIT_DELAYED_WORK(&chip->otg_disable_wrkr, otg_disable_worker);
  	schedule_delayed_work(&chip->chrg_full_wrkr, 3*HZ);
 -#ifdef ASUS_ENG_BUILD
 -        schedule_delayed_work(&chip->jeita_wrkr, 20*HZ);
@@ -2025,7 +2458,7 @@ index 841243513818..60d43d970359 100755
  	mutex_init(&chip->event_lock);
  
  	/* Initialize the wakelock */
-@@ -3237,25 +2070,18 @@ static int bq24192_probe(struct i2c_client *client,
+@@ -3237,25 +1966,17 @@ static int bq24192_probe(struct i2c_client *client,
  						"ctp_charger_wakelock");
  
  	/* register bq24192 usb with power supply subsystem */
@@ -2044,7 +2477,7 @@ index 841243513818..60d43d970359 100755
 +		usb_config.num_supplicants = ARRAY_SIZE(bq24192_supplied_to);
  		chip->max_cc = 1216;
  		chip->max_cv = 4200;
- 		chip->bat_health = POWER_SUPPLY_HEALTH_GOOD;
+-		chip->bat_health = POWER_SUPPLY_HEALTH_GOOD;
  		chip->chgr_stat = BQ24192_CHRGR_STAT_UNKNOWN;
 -		chip->usb.properties = bq24192_usb_props;
 -		chip->usb.num_properties = ARRAY_SIZE(bq24192_usb_props);
@@ -2059,7 +2492,7 @@ index 841243513818..60d43d970359 100755
  			dev_err(&client->dev, "failed:power supply register\n");
  			i2c_set_clientdata(client, NULL);
  			kfree(chip);
-@@ -3266,51 +2092,14 @@ static int bq24192_probe(struct i2c_client *client,
+@@ -3266,51 +1987,48 @@ static int bq24192_probe(struct i2c_client *client,
  	//pm_runtime_put_noidle(&chip->client->dev);
  	//pm_schedule_suspend(&chip->client->dev, MSEC_PER_SEC);
  
@@ -2084,26 +2517,55 @@ index 841243513818..60d43d970359 100755
 -	 * Register to get USB transceiver events
 -	 */
 -	ret = register_otg_notification(chip);
--	if (ret) {
++
++	INIT_WORK(&chip->charger_type_work, bq24192_update_charger_state);
++	INIT_DELAYED_WORK(&chip->otg_work, bq24192_update_otg_state);
++
++	/* Setup extcon notifiers */
++	chip->vbus_nb.priority = 1; /* Higher priority to cancel event to PHY */
++	chip->vbus_nb.notifier_call = bq24192_vbus_notifier;
++	ret = devm_extcon_register_notifier(&client->dev, chip->vbus_edev,
++					EXTCON_USB, &chip->vbus_nb);
+ 	if (ret) {
 -		dev_err(&chip->client->dev,
 -					"REGISTER OTG NOTIFICATION FAILED\n");
--	}
++		dev_err(&client->dev,
++			"Failed to register VBUS extcon notifier: %d\n", ret);
+ 	}
 -#endif
 -	/* Program the safety charge temperature threshold with default value*/
 -	ret =  intel_scu_ipc_iowrite8(MSIC_CHRTMPCTRL,
 -				(CHRTMPCTRL_TMPH_45 | CHRTMPCTRL_TMPL_00));
--	if (ret) {
++
++	chip->charger_nb.notifier_call = bq24192_charger_notifier;
++	ret = devm_extcon_register_notifier_all(
++			&client->dev, chip->charger_edev, &chip->charger_nb);
+ 	if (ret) {
 -		dev_err(&chip->client->dev,
 -				"IPC Failed with %d error\n", ret);
--	}
++		dev_err(&client->dev,
++			"Failed to register charger extcon notifier: %d\n", ret);
+ 	}
  
 -	bq2415x_sysfs_flag=bq24192_powersupply_init(client);
 -	if(!bq2415x_sysfs_flag){
 -		bq2415x_sysfs_init();
--	}
-+	if (g_usb_state)
-+		bq24192_cable_callback(g_usb_state);
++	chip->otg_nb.notifier_call = bq24192_otg_notifier;
++	ret = devm_extcon_register_notifier(&client->dev, chip->id_edev,
++					EXTCON_USB_HOST, &chip->otg_nb);
++	if (ret) {
++		dev_err(&client->dev,
++			"Failed to register OTG ID extcon notifier: %d\n", ret);
+ 	}
  
++	/* Check initial charger state */
++	schedule_work(&chip->charger_type_work);
++	flush_work(&chip->charger_type_work);
++
++	/* Check initial OTG state */
++	schedule_delayed_work(&chip->otg_work, 0);
++	flush_delayed_work(&chip->otg_work);
++
  	intel_mid_pmic_writeb(0x24, 0xaa);//vaild battery detection threshold 3.5v
 -#ifdef  ASUS_ENG_BUILD
 -        ret = init_asus_charging_limit_toggle();
@@ -2115,7 +2577,7 @@ index 841243513818..60d43d970359 100755
  	return 0;
  }
  
-@@ -3318,20 +2107,12 @@ static int bq24192_remove(struct i2c_client *client)
+@@ -3318,20 +2036,12 @@ static int bq24192_remove(struct i2c_client *client)
  {
  	struct bq24192_chip *chip = i2c_get_clientdata(client);
  
@@ -2138,7 +2600,21 @@ index 841243513818..60d43d970359 100755
  	i2c_set_clientdata(client, NULL);
  	wake_lock_destroy(&chip->wakelock);
  	kfree(chip);
-@@ -3352,21 +2133,18 @@ static void bq24192_shutdown(struct i2c_client *client)
+@@ -3342,31 +2052,25 @@ static int bq24192_remove(struct i2c_client *client)
+ 
+ static void bq24192_shutdown(struct i2c_client *client)
+ {
+-	//disable otg
+-	if(OtgOk){
+-		bq24192_reg_read_modify(chip_extern->client,
+-		   BQ24192_POWER_ON_CFG_REG,
+-		   0x20, false);
+-		OtgOk = 0;
+-		}
++	struct bq24192_chip *chip = i2c_get_clientdata(client);
++
++	// Disable OTG
++	bq24192_otg_boost(chip, false);
  
  	cancel_delayed_work(&chip_extern->chrg_full_wrkr);
  	cancel_delayed_work(&chip_extern->chrg_task_wrkr);
@@ -2161,7 +2637,7 @@ index 841243513818..60d43d970359 100755
  	if (chip->irq > 0) {
  		/*
  		 * Once the WDT is expired all bq24192 registers gets
-@@ -3393,7 +2171,7 @@ static int bq24192_suspend(struct device *dev)
+@@ -3393,7 +2097,7 @@ static int bq24192_suspend(struct device *dev)
  static int bq24192_resume(struct device *dev)
  {
  	struct bq24192_chip *chip = dev_get_drvdata(dev);
@@ -2170,7 +2646,7 @@ index 841243513818..60d43d970359 100755
  
  	printk("bq24192_resume\n");
  	schedule_delayed_work(&chip->chrg_full_wrkr, 0);
-@@ -3421,7 +2199,7 @@ static int bq24192_resume(struct device *dev)
+@@ -3421,7 +2125,7 @@ static int bq24192_resume(struct device *dev)
  #define bq24192_resume NULL
  #endif
  
@@ -2179,7 +2655,7 @@ index 841243513818..60d43d970359 100755
  static int bq24192_runtime_suspend(struct device *dev)
  {
  
-@@ -3453,6 +2231,14 @@ static const struct i2c_device_id bq24192_id[] = {
+@@ -3453,6 +2157,14 @@ static const struct i2c_device_id bq24192_id[] = {
  };
  MODULE_DEVICE_TABLE(i2c, bq24192_id);
  
@@ -2194,7 +2670,7 @@ index 841243513818..60d43d970359 100755
  static const struct dev_pm_ops bq24192_pm_ops = {
  	.suspend		= bq24192_suspend,
  	.resume			= bq24192_resume,
-@@ -3465,6 +2251,7 @@ static struct i2c_driver bq24192_i2c_driver = {
+@@ -3465,6 +2177,7 @@ static struct i2c_driver bq24192_i2c_driver = {
  	.driver	= {
  		.name	= DEV_NAME,
  		.owner	= THIS_MODULE,
@@ -2202,7 +2678,7 @@ index 841243513818..60d43d970359 100755
  		.pm	= &bq24192_pm_ops,
  	},
  	.probe		= bq24192_probe,
-@@ -3472,7 +2259,7 @@ static struct i2c_driver bq24192_i2c_driver = {
+@@ -3472,7 +2185,7 @@ static struct i2c_driver bq24192_i2c_driver = {
  	.id_table	= bq24192_id,
  	.shutdown   = bq24192_shutdown,
  };
@@ -2211,7 +2687,7 @@ index 841243513818..60d43d970359 100755
  static int __init bq24192_init(void)
  {
  	return i2c_add_driver(&bq24192_i2c_driver);
-@@ -3483,76 +2270,7 @@ static void __exit bq24192_exit(void)
+@@ -3483,76 +2196,7 @@ static void __exit bq24192_exit(void)
  	i2c_del_driver(&bq24192_i2c_driver);
  }
  module_exit(bq24192_exit);
@@ -2710,5 +3186,5 @@ index bcff1c68b689..1bcd50f94917 100644
 -obj-y += ASUS_BATTERY/ME176C/
 +obj-$(CONFIG_ASUS_ME176C_BATTERY) += ASUS_BATTERY/ME176C/
 -- 
-2.16.2
+2.17.0
 

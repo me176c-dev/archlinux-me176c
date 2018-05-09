@@ -1,7 +1,8 @@
-From 7f51859f777b51b6bfb4905c874b1add6c2bb8bb Mon Sep 17 00:00:00 2001
+From adbace1ca20fb9cc8a76aba7c8ef762a922370b1 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Fri, 9 Feb 2018 14:17:25 +0100
-Subject: [PATCH 21/22] drm/i915: Make maximum PWM brightness configurable
+Subject: [PATCH 24/25] ME176C: drm/i915: Make maximum PWM brightness
+ configurable
 
 Right now, PWM backlight is exposed as percentage. However, the
 PWM device may actually have more backlight levels available. In
@@ -50,7 +51,7 @@ index ac844709c97e..ae0a2a4f2695 100644
  	func(int, enable_guc_submission); \
  	func(int, guc_log_level); \
 diff --git a/drivers/gpu/drm/i915/intel_panel.c b/drivers/gpu/drm/i915/intel_panel.c
-index 3b1c5d783ee7..171d0172519a 100644
+index 8e0b177d6bba..e8ae6b7e5895 100644
 --- a/drivers/gpu/drm/i915/intel_panel.c
 +++ b/drivers/gpu/drm/i915/intel_panel.c
 @@ -540,7 +540,7 @@ static u32 pwm_get_backlight(struct intel_connector *connector)
@@ -71,7 +72,7 @@ index 3b1c5d783ee7..171d0172519a 100644
  
  	pwm_config(panel->backlight.pwm, duty_ns, CRC_PMIC_PWM_PERIOD_NS);
  }
-@@ -1779,10 +1779,10 @@ static int pwm_setup_backlight(struct intel_connector *connector,
+@@ -1770,10 +1770,10 @@ static int pwm_setup_backlight(struct intel_connector *connector,
  		return retval;
  	}
  
@@ -86,5 +87,5 @@ index 3b1c5d783ee7..171d0172519a 100644
  	panel->backlight.enabled = panel->backlight.level != 0;
  
 -- 
-2.16.2
+2.17.0
 

@@ -1,18 +1,18 @@
-From b379726fe9f35ff06487c358b54317a4cc605ce5 Mon Sep 17 00:00:00 2001
+From a580cddcbcb2f95bbedd7bb623252524a1be0af1 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sat, 3 Mar 2018 16:06:23 +0100
-Subject: [PATCH 22/22] ME176C: Revert "Input: goodix - poll the 'buffer
+Subject: [PATCH 25/25] ME176C: Revert "Input: goodix - poll the 'buffer
  status' bit before reading data"
 
 This reverts commit 9b5db7aab4d6b66f84f5e147c87eff4fe8b48651.
 
 Seems to cause problems with touchscreen sensitivity.
 ---
- drivers/input/touchscreen/goodix.c | 67 +++++++++++++-------------------------
+ drivers/input/touchscreen/goodix.c | 67 ++++++++++--------------------
  1 file changed, 23 insertions(+), 44 deletions(-)
 
 diff --git a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
-index b3bbad7d2282..32d2762448aa 100644
+index 5dafafad6351..d208dbf10fbb 100644
 --- a/drivers/input/touchscreen/goodix.c
 +++ b/drivers/input/touchscreen/goodix.c
 @@ -72,9 +72,6 @@ struct goodix_ts_data {
@@ -103,5 +103,5 @@ index b3bbad7d2282..32d2762448aa 100644
  
  static void goodix_ts_report_touch(struct goodix_ts_data *ts, u8 *coor_data)
 -- 
-2.16.2
+2.17.0
 

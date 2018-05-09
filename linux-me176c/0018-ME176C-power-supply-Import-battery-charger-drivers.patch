@@ -1,41 +1,40 @@
-From dc893878b22021b27c7a45393fd219c0af797147 Mon Sep 17 00:00:00 2001
+From c0969aaab4e16e1799a7b89338943a0a74344549 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Fri, 19 May 2017 12:25:13 +0200
-Subject: [PATCH 18/22] ME176C: power: supply: Import ASUS MeMO Pad 7
- battery/charger drivers
+Subject: [PATCH 18/25] ME176C: power: supply: Import battery/charger drivers
 
 Taken from: l-byt-r1_V12.10.1.33-201509171530-foss
 ---
- drivers/power/supply/ASUS_BATTERY/ME176C/Kconfig   |   32 +
- drivers/power/supply/ASUS_BATTERY/ME176C/Makefile  |    8 +
- .../supply/ASUS_BATTERY/ME176C/bq24192_charger.c   | 3559 ++++++++++
- .../supply/ASUS_BATTERY/ME176C/ug31xx/Makefile     |   21 +
- .../supply/ASUS_BATTERY/ME176C/ug31xx/global.h     |   28 +
- .../supply/ASUS_BATTERY/ME176C/ug31xx/stdafx.h     |   49 +
- .../supply/ASUS_BATTERY/ME176C/ug31xx/typeDefine.h |  400 ++
- .../supply/ASUS_BATTERY/ME176C/ug31xx/uG31xx.h     |  159 +
- .../supply/ASUS_BATTERY/ME176C/ug31xx/uG31xx_API.c | 7134 ++++++++++++++++++++
- .../supply/ASUS_BATTERY/ME176C/ug31xx/uG31xx_API.h |  549 ++
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_Backup.c |  793 +++
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_Backup.h |  167 +
- .../ME176C/ug31xx/uG31xx_API_Capacity.c            | 2967 ++++++++
- .../ME176C/ug31xx/uG31xx_API_Capacity.h            |  288 +
- .../ME176C/ug31xx/uG31xx_API_Measurement.c         | 2567 +++++++
- .../ME176C/ug31xx/uG31xx_API_Measurement.h         |  217 +
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_Otp.c    |  952 +++
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_Otp.h    |   94 +
- .../ME176C/ug31xx/uG31xx_API_Platform.c            | 1509 +++++
- .../ME176C/ug31xx/uG31xx_API_Platform.h            |  245 +
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_System.c | 2029 ++++++
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API_System.h |  275 +
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_Platform.h   |   35 +
- .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_Reg_Def.h    |  668 ++
- .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_gauge.c      | 4466 ++++++++++++
- .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_gauge.h      |  213 +
- .../ME176C/ug31xx/ug31xx_ggb_data_k013.h           |  237 +
- .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_version.h    |    8 +
- drivers/power/supply/Kconfig                       |    1 +
- drivers/power/supply/Makefile                      |    2 +
+ .../power/supply/ASUS_BATTERY/ME176C/Kconfig  |   32 +
+ .../power/supply/ASUS_BATTERY/ME176C/Makefile |    8 +
+ .../ASUS_BATTERY/ME176C/bq24192_charger.c     | 3559 ++++++++
+ .../ASUS_BATTERY/ME176C/ug31xx/Makefile       |   21 +
+ .../ASUS_BATTERY/ME176C/ug31xx/global.h       |   28 +
+ .../ASUS_BATTERY/ME176C/ug31xx/stdafx.h       |   49 +
+ .../ASUS_BATTERY/ME176C/ug31xx/typeDefine.h   |  400 +
+ .../ASUS_BATTERY/ME176C/ug31xx/uG31xx.h       |  159 +
+ .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API.c   | 7134 +++++++++++++++++
+ .../ASUS_BATTERY/ME176C/ug31xx/uG31xx_API.h   |  549 ++
+ .../ME176C/ug31xx/uG31xx_API_Backup.c         |  793 ++
+ .../ME176C/ug31xx/uG31xx_API_Backup.h         |  167 +
+ .../ME176C/ug31xx/uG31xx_API_Capacity.c       | 2967 +++++++
+ .../ME176C/ug31xx/uG31xx_API_Capacity.h       |  288 +
+ .../ME176C/ug31xx/uG31xx_API_Measurement.c    | 2567 ++++++
+ .../ME176C/ug31xx/uG31xx_API_Measurement.h    |  217 +
+ .../ME176C/ug31xx/uG31xx_API_Otp.c            |  952 +++
+ .../ME176C/ug31xx/uG31xx_API_Otp.h            |   94 +
+ .../ME176C/ug31xx/uG31xx_API_Platform.c       | 1509 ++++
+ .../ME176C/ug31xx/uG31xx_API_Platform.h       |  245 +
+ .../ME176C/ug31xx/uG31xx_API_System.c         | 2029 +++++
+ .../ME176C/ug31xx/uG31xx_API_System.h         |  275 +
+ .../ME176C/ug31xx/uG31xx_Platform.h           |   35 +
+ .../ME176C/ug31xx/uG31xx_Reg_Def.h            |  668 ++
+ .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_gauge.c | 4466 +++++++++++
+ .../ASUS_BATTERY/ME176C/ug31xx/ug31xx_gauge.h |  213 +
+ .../ME176C/ug31xx/ug31xx_ggb_data_k013.h      |  237 +
+ .../ME176C/ug31xx/ug31xx_version.h            |    8 +
+ drivers/power/supply/Kconfig                  |    1 +
+ drivers/power/supply/Makefile                 |    2 +
  30 files changed, 29672 insertions(+)
  create mode 100644 drivers/power/supply/ASUS_BATTERY/ME176C/Kconfig
  create mode 100644 drivers/power/supply/ASUS_BATTERY/ME176C/Makefile
@@ -29926,5 +29925,5 @@ index aae4e4a8bbb3..bcff1c68b689 100644
 +
 +obj-y += ASUS_BATTERY/ME176C/
 -- 
-2.16.2
+2.17.0
 

@@ -1,7 +1,7 @@
-From 70d15d7fa10157ba601774dc1aa7df4ff2bfd25f Mon Sep 17 00:00:00 2001
+From 36afb157622b9f0c90f24b111705c10f6e173c35 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Fri, 9 Feb 2018 11:04:01 +0100
-Subject: [PATCH 20/22] ME176C: pwm: crc: Turn off backlight when shutting down
+Subject: [PATCH 22/25] ME176C: pwm: crc: Turn off backlight when shutting down
 
 We need to turn off the backlight when shutting down to power off
 the screen correctly. Otherwise, pressing the power button after
@@ -34,5 +34,5 @@ index bd0ebd04856a..6ee577cab321 100644
  		.name = "crystal_cove_pwm",
  	},
 -- 
-2.16.2
+2.17.0
 

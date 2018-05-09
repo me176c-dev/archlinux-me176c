@@ -1,15 +1,15 @@
-From 949ab5c0597a3d7a67b20d0175cfc5575b815dac Mon Sep 17 00:00:00 2001
+From c203196442e5e6ec50674489b2935d0fd92a6561 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Tue, 23 May 2017 21:47:10 +0200
-Subject: [PATCH 17/22] ME176C: intel-mid: Add compatibility layer for old
+Subject: [PATCH 17/25] ME176C: intel-mid: Add compatibility layer for old
  intel_mid_pmic.h
 
 ---
- drivers/mfd/Kconfig                |  4 ++++
+ drivers/mfd/Kconfig                |  4 +++
  drivers/mfd/Makefile               |  1 +
- drivers/mfd/intel_mid_pmic.c       | 45 ++++++++++++++++++++++++++++++++++++++
- drivers/mfd/intel_soc_pmic_core.c  | 14 ++++++++++++
- include/linux/mfd/intel_mid_pmic.h | 10 +++++++++
+ drivers/mfd/intel_mid_pmic.c       | 45 ++++++++++++++++++++++++++++++
+ drivers/mfd/intel_soc_pmic_core.c  | 14 ++++++++++
+ include/linux/mfd/intel_mid_pmic.h | 10 +++++++
  5 files changed, 74 insertions(+)
  create mode 100644 drivers/mfd/intel_mid_pmic.c
  create mode 100644 include/linux/mfd/intel_mid_pmic.h
@@ -148,5 +148,5 @@ index 000000000000..fbdd566dd836
 +
 +#endif
 -- 
-2.16.2
+2.17.0
 

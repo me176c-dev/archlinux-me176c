@@ -1,16 +1,16 @@
-From 88d03c85d43a03be397f17f4aaab05427aa1ab66 Mon Sep 17 00:00:00 2001
+From 885b58e41e6903a0ac49cf45c1e00fa10881804a Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:53:35 +0200
-Subject: [PATCH 06/22] ME176C: x86: Add support to optimize kernel for
+Subject: [PATCH 07/25] ME176C: x86: Add support to optimize kernel for
  Silvermont CPUs
 
 ---
- arch/x86/Kconfig.cpu                           | 20 +++++++++++++-------
- arch/x86/Makefile                              |  1 +
- arch/x86/Makefile_32.cpu                       |  1 +
- arch/x86/include/asm/module.h                  |  2 ++
- arch/x86/include/asm/required-features.h       |  2 +-
- tools/arch/x86/include/asm/required-features.h |  2 +-
+ arch/x86/Kconfig.cpu                          | 20 ++++++++++++-------
+ arch/x86/Makefile                             |  1 +
+ arch/x86/Makefile_32.cpu                      |  1 +
+ arch/x86/include/asm/module.h                 |  2 ++
+ arch/x86/include/asm/required-features.h      |  2 +-
+ .../arch/x86/include/asm/required-features.h  |  2 +-
  6 files changed, 19 insertions(+), 9 deletions(-)
 
 diff --git a/arch/x86/Kconfig.cpu b/arch/x86/Kconfig.cpu
@@ -80,7 +80,7 @@ index 65a9a4716e34..c63a9344726a 100644
  config X86_MINIMUM_CPU_FAMILY
  	int
 diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-index 498c1b812300..5fc388e55d62 100644
+index 1c4d012550ec..4f5567fbba8f 100644
 --- a/arch/x86/Makefile
 +++ b/arch/x86/Makefile
 @@ -131,6 +131,7 @@ else
@@ -143,5 +143,5 @@ index d91ba04dd007..c8faa39bae52 100644
  #else
  # define NEED_MOVBE	0
 -- 
-2.16.2
+2.17.0
 

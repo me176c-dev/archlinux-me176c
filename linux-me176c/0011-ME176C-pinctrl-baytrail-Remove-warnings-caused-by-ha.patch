@@ -1,7 +1,7 @@
-From 6336f877aa4be068fca24553b36b120578cdc6ac Mon Sep 17 00:00:00 2001
+From 539477a072e3faa2adc20b6ef13f63a5b69bbc35 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Thu, 7 Sep 2017 12:17:48 +0200
-Subject: [PATCH 10/22] ME176C: pinctrl: baytrail: Remove warnings caused by
+Subject: [PATCH 11/25] ME176C: pinctrl: baytrail: Remove warnings caused by
  hardware config
 
 These warnings are printed whenever the screen is suspended. Since
@@ -12,10 +12,10 @@ remove them for now to make the kernel log more readable.
  1 file changed, 13 deletions(-)
 
 diff --git a/drivers/pinctrl/intel/pinctrl-baytrail.c b/drivers/pinctrl/intel/pinctrl-baytrail.c
-index 0f3a02495aeb..ff6891a913b5 100644
+index beeb7cbb5015..9bdf52993319 100644
 --- a/drivers/pinctrl/intel/pinctrl-baytrail.c
 +++ b/drivers/pinctrl/intel/pinctrl-baytrail.c
-@@ -1014,7 +1014,6 @@ static int byt_gpio_set_direction(struct pinctrl_dev *pctl_dev,
+@@ -1017,7 +1017,6 @@ static int byt_gpio_set_direction(struct pinctrl_dev *pctl_dev,
  {
  	struct byt_gpio *vg = pinctrl_dev_get_drvdata(pctl_dev);
  	void __iomem *val_reg = byt_gpio_reg(vg, offset, BYT_VAL_REG);
@@ -23,7 +23,7 @@ index 0f3a02495aeb..ff6891a913b5 100644
  	unsigned long flags;
  	u32 value;
  
-@@ -1024,15 +1023,6 @@ static int byt_gpio_set_direction(struct pinctrl_dev *pctl_dev,
+@@ -1027,15 +1026,6 @@ static int byt_gpio_set_direction(struct pinctrl_dev *pctl_dev,
  	value &= ~BYT_DIR_MASK;
  	if (input)
  		value |= BYT_OUTPUT_EN;
@@ -39,7 +39,7 @@ index 0f3a02495aeb..ff6891a913b5 100644
  	writel(value, val_reg);
  
  	raw_spin_unlock_irqrestore(&vg->lock, flags);
-@@ -1571,9 +1561,6 @@ static int byt_irq_type(struct irq_data *d, unsigned int type)
+@@ -1574,9 +1564,6 @@ static int byt_irq_type(struct irq_data *d, unsigned int type)
  	raw_spin_lock_irqsave(&vg->lock, flags);
  	value = readl(reg);
  
@@ -50,5 +50,5 @@ index 0f3a02495aeb..ff6891a913b5 100644
  	 * are used to indicate high and low level triggering
  	 */
 -- 
-2.16.2
+2.17.0
 
