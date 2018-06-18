@@ -1,7 +1,7 @@
-From 7ab3d0cb5f5eb1eeb38af385a69c97b612428675 Mon Sep 17 00:00:00 2001
+From a3299f825d8b167f3d28c92eefa9fdba6a37c934 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 24 May 2017 16:15:17 +0200
-Subject: [PATCH 19/25] ME176C: power: supply: Fix battery/charger drivers (v2)
+Subject: [PATCH 20/26] ME176C: power: supply: Fix battery/charger drivers (v2)
 
  - Major cleanup for bq24192_charger: removed a lot of unused code
  - Load bq24192_charger using ACPI (added to custom DSDT table)
@@ -3186,5 +3186,5 @@ index bcff1c68b689..1bcd50f94917 100644
 -obj-y += ASUS_BATTERY/ME176C/
 +obj-$(CONFIG_ASUS_ME176C_BATTERY) += ASUS_BATTERY/ME176C/
 -- 
-2.17.0
+2.17.1
 

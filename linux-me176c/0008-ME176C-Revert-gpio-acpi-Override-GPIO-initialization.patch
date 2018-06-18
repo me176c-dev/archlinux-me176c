@@ -1,7 +1,7 @@
-From b50ea33fe7cf193e00cbb4a654ed311535e165a5 Mon Sep 17 00:00:00 2001
+From b831eebf4df6a009216c4b72e2ddb71b640b1005 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Thu, 11 Jan 2018 18:18:31 +0100
-Subject: [PATCH 15/25] ME176C: Revert "gpio: acpi: Override GPIO
+Subject: [PATCH 08/26] ME176C: Revert "gpio: acpi: Override GPIO
  initialization flags"
 
 This breaks Bluetooth (and possibly other things). The GPIO flags
@@ -141,10 +141,10 @@ index d6f3d9ee1350..1b145f10c91e 100644
  							  info.polarity);
  
 diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
-index b4c8b25453a6..2fe922219b11 100644
+index 7e0bfd7347f6..edfcf938eb2e 100644
 --- a/drivers/gpio/gpiolib.c
 +++ b/drivers/gpio/gpiolib.c
-@@ -3322,7 +3322,7 @@ struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
+@@ -3325,7 +3325,7 @@ struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
  			desc = of_find_gpio(dev, con_id, idx, &lookupflags);
  		} else if (ACPI_COMPANION(dev)) {
  			dev_dbg(dev, "using ACPI for GPIO lookup\n");
@@ -153,7 +153,7 @@ index b4c8b25453a6..2fe922219b11 100644
  		}
  	}
  
-@@ -3406,12 +3406,8 @@ struct gpio_desc *fwnode_get_named_gpiod(struct fwnode_handle *fwnode,
+@@ -3412,12 +3412,8 @@ struct gpio_desc *fwnode_get_named_gpiod(struct fwnode_handle *fwnode,
  		struct acpi_gpio_info info;
  
  		desc = acpi_node_get_gpiod(fwnode, propname, index, &info);
@@ -218,5 +218,5 @@ index 3d4d0634c9dd..62daf8304440 100644
  {
  	return ERR_PTR(-ENOENT);
 -- 
-2.17.0
+2.17.1
 

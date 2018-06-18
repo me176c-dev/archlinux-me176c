@@ -1,7 +1,7 @@
-From bcfed07da4c40f7b6e5379164d7bd84429c32b2d Mon Sep 17 00:00:00 2001
+From bec6c2a37d9030fd46d35418efec0a80c70af6ea Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 3 Jan 2018 12:59:40 +0100
-Subject: [PATCH 12/25] media: staging: atomisp: Avoid using trace_printk() by
+Subject: [PATCH 05/26] media: staging: atomisp: Avoid using trace_printk() by
  default
 
 ---
@@ -72,5 +72,5 @@ index b8aae4ba5a78..ed56797c2065 100644
  		     hmm_mem_stat.usr_size, hmm_mem_stat.res_size,
  		     hmm_mem_stat.res_cnt, hmm_mem_stat.sys_size,
 -- 
-2.17.0
+2.17.1
 

@@ -1,7 +1,7 @@
-From ca02ef08072d75e6c2a60cee64cf45e11591a8d9 Mon Sep 17 00:00:00 2001
+From 5c7f7cd7046331e4de0fc2c0d92cff90a33d6a45 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sun, 3 Sep 2017 19:08:11 +0200
-Subject: [PATCH 10/25] ME176C: ASoC: Intel: bytcr_rt5640_jack: Headphone
+Subject: [PATCH 15/26] ME176C: ASoC: Intel: bytcr_rt5640_jack: Headphone
  detection driver (v2)
 
 ---
@@ -176,5 +176,5 @@ index 000000000000..f53c39e1dccf
 +MODULE_AUTHOR("Lambdadroid <lambdadroid@gmail.com>");
 +MODULE_LICENSE("GPL v2");
 -- 
-2.17.0
+2.17.1
 

@@ -1,7 +1,7 @@
-From 539477a072e3faa2adc20b6ef13f63a5b69bbc35 Mon Sep 17 00:00:00 2001
+From 59e3e2ae9b9f5371d0c3d8a42502ac7935bc25a3 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Thu, 7 Sep 2017 12:17:48 +0200
-Subject: [PATCH 11/25] ME176C: pinctrl: baytrail: Remove warnings caused by
+Subject: [PATCH 16/26] ME176C: pinctrl: baytrail: Remove warnings caused by
  hardware config
 
 These warnings are printed whenever the screen is suspended. Since
@@ -12,7 +12,7 @@ remove them for now to make the kernel log more readable.
  1 file changed, 13 deletions(-)
 
 diff --git a/drivers/pinctrl/intel/pinctrl-baytrail.c b/drivers/pinctrl/intel/pinctrl-baytrail.c
-index beeb7cbb5015..9bdf52993319 100644
+index 18b46517812c..34526be0684b 100644
 --- a/drivers/pinctrl/intel/pinctrl-baytrail.c
 +++ b/drivers/pinctrl/intel/pinctrl-baytrail.c
 @@ -1017,7 +1017,6 @@ static int byt_gpio_set_direction(struct pinctrl_dev *pctl_dev,
@@ -50,5 +50,5 @@ index beeb7cbb5015..9bdf52993319 100644
  	 * are used to indicate high and low level triggering
  	 */
 -- 
-2.17.0
+2.17.1
 

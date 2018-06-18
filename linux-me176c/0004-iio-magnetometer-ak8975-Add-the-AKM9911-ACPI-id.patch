@@ -1,7 +1,7 @@
-From 50daf266bb3229c9e017a090986197455a5e6f73 Mon Sep 17 00:00:00 2001
+From 5d22b16b9bdf7278bf9e0ce076ae0c8f27fc66a6 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:53:35 +0200
-Subject: [PATCH 06/25] iio: magnetometer: ak8975: Add the "AKM9911" ACPI id
+Subject: [PATCH 04/26] iio: magnetometer: ak8975: Add the "AKM9911" ACPI id
 
 Found on ASUS MeMO Pad 7 (ME176C).
 ---
@@ -21,5 +21,5 @@ index 4ff883942f7b..ac83992cd8a2 100644
  	{ },
  };
 -- 
-2.17.0
+2.17.1
 

@@ -1,7 +1,7 @@
-From 8cc9929b64fe312895b509cff651401532881efd Mon Sep 17 00:00:00 2001
+From 58f3a2717955aaaf7f51b650706376654d850592 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Tue, 9 Jan 2018 21:40:56 +0100
-Subject: [PATCH 13/25] ME176C: Revert "pinctrl: baytrail: Do not add all GPIOs
+Subject: [PATCH 06/26] ME176C: Revert "pinctrl: baytrail: Do not add all GPIOs
  to IRQ domain"
 
 Causes problems with Bluetooth. We use one of the GPIOs as interrupt,
@@ -17,10 +17,10 @@ This reverts commit 49c03096263871a68c9dea3e86b7d1e163d2fba8.
  1 file changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pinctrl/intel/pinctrl-baytrail.c b/drivers/pinctrl/intel/pinctrl-baytrail.c
-index 9bdf52993319..dc9aa8e9e510 100644
+index beeb7cbb5015..fc92dc0581ed 100644
 --- a/drivers/pinctrl/intel/pinctrl-baytrail.c
 +++ b/drivers/pinctrl/intel/pinctrl-baytrail.c
-@@ -1629,8 +1629,6 @@ static void byt_gpio_irq_handler(struct irq_desc *desc)
+@@ -1642,8 +1642,6 @@ static void byt_gpio_irq_handler(struct irq_desc *desc)
  
  static void byt_gpio_irq_init_hw(struct byt_gpio *vg)
  {
@@ -29,7 +29,7 @@ index 9bdf52993319..dc9aa8e9e510 100644
  	void __iomem *reg;
  	u32 base, value;
  	int i;
-@@ -1652,12 +1650,10 @@ static void byt_gpio_irq_init_hw(struct byt_gpio *vg)
+@@ -1665,12 +1663,10 @@ static void byt_gpio_irq_init_hw(struct byt_gpio *vg)
  		}
  
  		value = readl(reg);
@@ -45,7 +45,7 @@ index 9bdf52993319..dc9aa8e9e510 100644
  		}
  	}
  
-@@ -1696,7 +1692,6 @@ static int byt_gpio_probe(struct byt_gpio *vg)
+@@ -1709,7 +1705,6 @@ static int byt_gpio_probe(struct byt_gpio *vg)
  	gc->can_sleep	= false;
  	gc->parent	= &vg->pdev->dev;
  	gc->ngpio	= vg->soc_data->npins;
@@ -54,5 +54,5 @@ index 9bdf52993319..dc9aa8e9e510 100644
  #ifdef CONFIG_PM_SLEEP
  	vg->saved_context = devm_kcalloc(&vg->pdev->dev, gc->ngpio,
 -- 
-2.17.0
+2.17.1
 

@@ -1,7 +1,7 @@
-From 0a2f6ba03f488a69457b937ea7469cc2c65d66f9 Mon Sep 17 00:00:00 2001
+From 2ad18d1bdf488e925552f16409d33fcb3ae1c716 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Fri, 9 Feb 2018 12:46:08 +0100
-Subject: [PATCH 23/25] ME176C: drm/i915: Avoid changing brightness to max
+Subject: [PATCH 24/26] ME176C: drm/i915: Avoid changing brightness to max
  after enable
 
 Right now, the brightness is reset to maximum if it was set to
@@ -36,5 +36,5 @@ index 3b1c5d783ee7..8e0b177d6bba 100644
  	panel->backlight.enabled = true;
  	if (panel->backlight.device)
 -- 
-2.17.0
+2.17.1
 

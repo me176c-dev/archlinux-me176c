@@ -1,7 +1,7 @@
-From 77bc59238654c06460860763c4e00c2556b4fd5f Mon Sep 17 00:00:00 2001
+From 0c3a7c90a2e1911a7350b972c77b1af9dcc219e0 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Mon, 26 Jun 2017 11:25:32 +0200
-Subject: [PATCH 04/25] ASoC: Intel: bytcr_rt5640: Add quirks for ASUS MeMO Pad
+Subject: [PATCH 02/26] ASoC: Intel: bytcr_rt5640: Add quirks for ASUS MeMO Pad
  7 (ME176C)
 
 ---
@@ -30,5 +30,5 @@ index 4a76b099a508..04b41c09eb5b 100644
  		.callback = byt_rt5640_quirk_cb,
  		.matches = {
 -- 
-2.17.0
+2.17.1
 

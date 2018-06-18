@@ -4,12 +4,12 @@
 #pkgbase=linux               # Build stock -ARCH kernel
 pkgbase=linux-me176c         # Build kernel with a different name
 _srcname=linux-4.14
-pkgver=4.14.40
+pkgver=4.14.50
 pkgrel=1
 arch=('x86_64')
 url="https://github.com/me176c-dev/me176c-archlinux"
 license=('GPL2')
-makedepends=('xmlto' 'kmod' 'inetutils' 'bc' 'libelf' 'iasl')
+makedepends=('xmlto' 'kmod' 'inetutils' 'bc' 'libelf' 'acpica')
 options=('!strip')
 source=(
   "https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
@@ -22,30 +22,31 @@ source=(
   'linux.preset'   # standard config files for mkinitcpio ramdisk
   'git+https://github.com/me176c-dev/me176c-acpi.git#commit=03640c055a488dc27f9860fca64a6a1c10bc2bc9'
   '0001-UPSTREAM-usb-dwc3-core-Fix-ULPI-PHYs-and-prevent-phy.patch'
-  '0002-ME176C-drivers-Makefile-Move-mfd-before-gpu.patch'
-  '0003-ME176C-ASoC-Intel-Atom-Force-use-of-BYT-CR-BIOS-reso.patch'
-  '0004-ASoC-Intel-bytcr_rt5640-Add-quirks-for-ASUS-MeMO-Pad.patch'
-  '0005-iio-accel-kxcjk-1013-Add-the-KXJ2109-ACPI-id.patch'
-  '0006-iio-magnetometer-ak8975-Add-the-AKM9911-ACPI-id.patch'
-  '0007-ME176C-x86-Add-support-to-optimize-kernel-for-Silver.patch'
-  '0008-ME176C-input-misc-Add-ASUS-Lid-Cover-driver.patch'
-  '0009-ME176C-ACPI-tables-Remap-GNVS-opregion-memory-offset.patch'
-  '0010-ME176C-ASoC-Intel-bytcr_rt5640_jack-Headphone-detect.patch'
-  '0011-ME176C-pinctrl-baytrail-Remove-warnings-caused-by-ha.patch'
-  '0012-media-staging-atomisp-Avoid-using-trace_printk-by-de.patch'
-  '0013-ME176C-Revert-pinctrl-baytrail-Do-not-add-all-GPIOs-.patch'
-  '0014-ME176C-Revert-pinctrl-intel-set-default-handler-to-b.patch'
-  '0015-ME176C-Revert-gpio-acpi-Override-GPIO-initialization.patch'
-  '0016-ME176C-PM-Sleep-Add-wake-lock-api-wrapper-on-top-of-.patch'
-  '0017-ME176C-intel-mid-Add-compatibility-layer-for-old-int.patch'
-  '0018-ME176C-power-supply-Import-battery-charger-drivers.patch'
-  '0019-ME176C-power-supply-Fix-battery-charger-drivers-v2.patch'
-  '0020-ME176C-extcon-Add-driver-for-Intel-Baytrail-Crystal-.patch'
-  '0021-ME176C-phy-tusb1210-Implement-basic-charger-detectio.patch'
-  '0022-ME176C-pwm-crc-Turn-off-backlight-when-shutting-down.patch'
-  '0023-ME176C-drm-i915-Avoid-changing-brightness-to-max-aft.patch'
-  '0024-ME176C-drm-i915-Make-maximum-PWM-brightness-configur.patch'
-  '0025-ME176C-Revert-Input-goodix-poll-the-buffer-status-bi.patch'
+  '0002-ASoC-Intel-bytcr_rt5640-Add-quirks-for-ASUS-MeMO-Pad.patch'
+  '0003-iio-accel-kxcjk-1013-Add-the-KXJ2109-ACPI-id.patch'
+  '0004-iio-magnetometer-ak8975-Add-the-AKM9911-ACPI-id.patch'
+  '0005-media-staging-atomisp-Avoid-using-trace_printk-by-de.patch'
+  '0006-ME176C-Revert-pinctrl-baytrail-Do-not-add-all-GPIOs-.patch'
+  '0007-ME176C-Revert-pinctrl-intel-set-default-handler-to-b.patch'
+  '0008-ME176C-Revert-gpio-acpi-Override-GPIO-initialization.patch'
+  '0009-ME176C-Revert-Input-goodix-poll-the-buffer-status-bi.patch'
+  '0010-ME176C-drivers-Makefile-Move-mfd-before-gpu.patch'
+  '0011-ME176C-ASoC-Intel-Atom-Force-use-of-BYT-CR-BIOS-reso.patch'
+  '0012-ME176C-x86-Add-support-to-optimize-kernel-for-Silver.patch'
+  '0013-ME176C-input-misc-Add-ASUS-Lid-Cover-driver.patch'
+  '0014-ME176C-ACPI-tables-Remap-GNVS-opregion-memory-offset.patch'
+  '0015-ME176C-ASoC-Intel-bytcr_rt5640_jack-Headphone-detect.patch'
+  '0016-ME176C-pinctrl-baytrail-Remove-warnings-caused-by-ha.patch'
+  '0017-ME176C-PM-Sleep-Add-wake-lock-api-wrapper-on-top-of-.patch'
+  '0018-ME176C-intel-mid-Add-compatibility-layer-for-old-int.patch'
+  '0019-ME176C-power-supply-Import-battery-charger-drivers.patch'
+  '0020-ME176C-power-supply-Fix-battery-charger-drivers-v2.patch'
+  '0021-ME176C-extcon-Add-driver-for-Intel-Baytrail-Crystal-.patch'
+  '0022-ME176C-phy-tusb1210-Implement-basic-charger-detectio.patch'
+  '0023-ME176C-pwm-crc-Turn-off-backlight-when-shutting-down.patch'
+  '0024-ME176C-drm-i915-Avoid-changing-brightness-to-max-aft.patch'
+  '0025-ME176C-drm-i915-Make-maximum-PWM-brightness-configur.patch'
+  '0026-ME176C-x86-platform-Register-ramoops-device-and-rese.patch'
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -53,44 +54,46 @@ validpgpkeys=(
 )
 sha256sums=('f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7'
             'SKIP'
-            '128ee971b97421aea56ddf093d860586054419b166a7a21a55a4389bd4dbbb2f'
+            'c7bd70353f2a44c164e0913cda4f73892c8edfecd8852f45282be96493a383c7'
             'SKIP'
             '2929bf51848b478d63ed3b1e0d6e5b9798d330b25ea579ac03ad59877546aaaa'
             'ae2e95db94ef7176207c690224169594d49445e04249d2499e9d2fbc117a0b21'
             '75f99f5239e03238f88d1a834c50043ec32b1dc568f2cc291b07d04718483919'
             'ad6344badc91ad0630caacde83f7f9b97276f80d26a20619a87952be65492c65'
             'SKIP'
-            'b387048374df3ea46056762febaf51c8f0784f594fdcbc6c4d3235cc30760b2d'
-            '69e84cff23a7155e8b47b4bb04cd7e590bbc708a3b404b1b8475b2296efefb4b'
-            'c3ec4d49126140d36f9915c22b7e7dbdf68a8eb823d2500d2589850f2da276f0'
-            '32f38f55142b9e3e1784cd7849db147d5479fb51d13a5553e553095de798bbe0'
-            '87104f5688806178eff0be43ec09c7a374a47653400d45c06d052ed20590cbfd'
-            'cd031f91765689eb62048cc1cdc7c6f8dcd7e73163aa733154d974388108e508'
-            '1e912ac1a1931ebd993a2b3c49885ae5beaa35f3d48e27b0c7836f56bc463021'
-            '058ce3a92ea601bc3105c8478dba5cf7d2263fd606f801a0174472973dbd12f4'
-            'adcec94d90cccb6c1aeb79523ec01c23851b8e48e0a114fe3c7aa55b3a7e2f85'
-            'af13b439947c42e0cdcb2c6804796dc7bac6a740fe2216aa42b7013a2c2ac576'
-            'c74f71a8f7a152e99575cf6772c907a15050e98eb9efd9cf236bd3e5928479b7'
-            'c9596848e44d35c8feaa7d9bde4d30a0a09f0615bde0fef4315f1a5597bd5af9'
-            'd6569a242411f44e2eca987ebfec8b03db1237356adbfa64ee91f34b88ae6376'
-            '6572bc579a08cb5ec75b8797080642e087d3c52f934d378daaeb00da391e30ee'
-            '4beffe5c9c931fde6ad593cf29bf23072c345716efaa7e6d423b3b567fba5cee'
-            '43e75a8e69508d0d475ba6353ab39190a3a3cf2c1a3f70be80abaa858ba89c11'
-            '51ee828da606d94772091d60c997f64874d7e054d41d160b0f4154cca2633eb8'
-            '1dac9e06a1a66f4b75ef1d4a7142dcc48c1ce61158e9a0f9fbf629111fc50341'
-            'c5eb5cb52b355b343d1ef89188e9c350d853d053c1932d1c1cbe04664896e3e9'
-            '0a826e227bec8ab399078a3327a6510c2e142628de657190da1c13883f722762'
-            '0468a39b67102a8af55a16036e862ae82820f0fe9697e5c65a68b7c6d65f4501'
-            '8f9850324ee48b0d7ca9395290ba7197511e3783b683943fefec47f5509242f3'
-            'a7e79d929a9583b8198bc9aa570c1d99d8382c77f8e5f10f520531f40419da05'
-            '0eefff0e771db0e915f3f13a90a3bb239c12364b0475aca2add89f8a4ba53726'
-            '2f57ed9605916dbfae665fbdcac82d868253c9f70a81e12fdeb11e8abc56fea6')
+            'ff894ebe53f53c7227ae3058e287bbbccb93324411bfc3f193728e9696a59252'
+            '750e7d070985231d1535bd8286afe275cc69c51472a56ef3196f4667c240bf19'
+            '6e0d781badc0deea82fc5ebe041599492de47c3db9fb3859e13bb382a6a05b81'
+            '3f989d23f91b8206212cd48ab7afdc525df72dc68c8ec8e725d21092fc6e59d7'
+            'ba7564a1e605924c513c442ebf9a0caa8642b88514c9ae015145b02d5a5373dc'
+            '69d4811260c9f9d84a0bb3f14b416d321b60c3065f3d8e4c2b69b3b82bf33db3'
+            '720b25aa898de88b97445897df2987ae6e9ba921a83bcee7d12ecd9779e02942'
+            '6205a2b5a058626dcaa5475f565b54788ef4286b08af93238f9d5da021498cfe'
+            'defc77bd07c0f4d7051702679bebc26e87493b5b1d14ceb9f7dd084d66065b93'
+            '633e946b7d0ab72a6941239be8d7afa5adbf0f282a910bffa5b9bbdcb192ef1f'
+            'f3efdd7f0d0a5d8d2ff0b813c3734785527c1fde316e88919a5f760c65bd34f7'
+            '696f515a855f6e9a1e87446f1f68b7bfd1b6999bb2f4c76daab63c0ba0c38133'
+            'f0f405f39d688ca0eb9f528efee281f31f8a3afd5211e3e4b8413e9ece1e32fb'
+            'b9137143d7f360e67c55780ef8269d574596ea9367a11d1af6673a2c76e45ede'
+            '8cf96b5f955aadba10262e18dd758c7b3cb21f2eebfbda85cabca4f6c7923ac6'
+            '0ef266e968ef802c7fb0cd0491c8e6d245762588366db1b196e17824a90e8f41'
+            '10e35aa5121471214005e4c492caa0b04628b346e1451353e5f4f0aabec8fe11'
+            'a355b189da600556af286a1e3037a345e5553211783935b5ce2d2ed6e3c4e4da'
+            'cf127a1c89ec5fbb61ecab0ed557b958191cb185dae527bd63d6a5c6aac9b6cc'
+            '6aa5c96328fb78d13932e73e7a4f58fb78482311911b70e3ca650ee57c6ee6a9'
+            '156fefba812ba23c03c1e6ae85f98a74f41d4d9d205dcc242f2d64868a1851c7'
+            '4ffc51316e7b588ce7dc93931c643845f4fb141b65911072d203437286a1e0be'
+            'f3e2b094d9af3c81f6c8ecf98e6f272335d9ca3581454fd2093c354532e20c8d'
+            '15a4743005feab5ae16906ff12b937c32f189810693d697250d48250656a9c56'
+            'e6d2ccaa8adf154d3c47b4bfe89b5d1f2c788c0fd1a5c7e6f486782c2c3158e1'
+            '3a3efeeb9848b8eb9019868eaae362ed926b6cf44fd197f3bcfb3156b6f85c23')
 
 _kernelname=${pkgbase#linux}
 
 prepare() {
   # Compile ACPI DSDT table
   iasl -tc me176c-acpi/dsdt.dsl
+  sed -i s/dsdt_aml_code/AmlCode/ me176c-acpi/dsdt.hex
 
   cd ${_srcname}
 

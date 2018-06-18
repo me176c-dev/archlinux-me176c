@@ -1,7 +1,7 @@
-From b3780917a12b01b8161a0dafc0457fbb4ec737db Mon Sep 17 00:00:00 2001
+From 36a112e91c99a99f5a1a7e7520eb6db1944c38a8 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Tue, 9 Jan 2018 21:41:08 +0100
-Subject: [PATCH 14/25] ME176C: Revert "pinctrl: intel: set default handler to
+Subject: [PATCH 07/26] ME176C: Revert "pinctrl: intel: set default handler to
  be handle_bad_irq()"
 
 This reverts commit 3ae02c14d964499da76b5ef4d8912710902e64f8.
@@ -11,10 +11,10 @@ This reverts commit 3ae02c14d964499da76b5ef4d8912710902e64f8.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pinctrl/intel/pinctrl-baytrail.c b/drivers/pinctrl/intel/pinctrl-baytrail.c
-index dc9aa8e9e510..34526be0684b 100644
+index fc92dc0581ed..18b46517812c 100644
 --- a/drivers/pinctrl/intel/pinctrl-baytrail.c
 +++ b/drivers/pinctrl/intel/pinctrl-baytrail.c
-@@ -1715,7 +1715,7 @@ static int byt_gpio_probe(struct byt_gpio *vg)
+@@ -1728,7 +1728,7 @@ static int byt_gpio_probe(struct byt_gpio *vg)
  	if (irq_rc && irq_rc->start) {
  		byt_gpio_irq_init_hw(vg);
  		ret = gpiochip_irqchip_add(gc, &byt_irqchip, 0,
@@ -37,5 +37,5 @@ index 71df0f70b61f..b17abfd6de6d 100644
  		dev_err(pctrl->dev, "failed to add irqchip\n");
  		return ret;
 -- 
-2.17.0
+2.17.1
 

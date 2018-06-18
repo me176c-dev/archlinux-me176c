@@ -1,7 +1,7 @@
-From 885b58e41e6903a0ac49cf45c1e00fa10881804a Mon Sep 17 00:00:00 2001
+From 298652d1a2d9540f3819dce9efc077bfa3fe3e45 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:53:35 +0200
-Subject: [PATCH 07/25] ME176C: x86: Add support to optimize kernel for
+Subject: [PATCH 12/26] ME176C: x86: Add support to optimize kernel for
  Silvermont CPUs
 
 ---
@@ -130,7 +130,7 @@ index fb3a6de7440b..720083e19023 100644
  #else
  # define NEED_MOVBE	0
 diff --git a/tools/arch/x86/include/asm/required-features.h b/tools/arch/x86/include/asm/required-features.h
-index d91ba04dd007..c8faa39bae52 100644
+index fb3a6de7440b..720083e19023 100644
 --- a/tools/arch/x86/include/asm/required-features.h
 +++ b/tools/arch/x86/include/asm/required-features.h
 @@ -47,7 +47,7 @@
@@ -143,5 +143,5 @@ index d91ba04dd007..c8faa39bae52 100644
  #else
  # define NEED_MOVBE	0
 -- 
-2.17.0
+2.17.1
 

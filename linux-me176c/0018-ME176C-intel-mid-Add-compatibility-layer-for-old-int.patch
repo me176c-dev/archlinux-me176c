@@ -1,7 +1,7 @@
-From c203196442e5e6ec50674489b2935d0fd92a6561 Mon Sep 17 00:00:00 2001
+From 8baf97bc6efdb503cf7f3aa50a8153eb80be879b Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Tue, 23 May 2017 21:47:10 +0200
-Subject: [PATCH 17/25] ME176C: intel-mid: Add compatibility layer for old
+Subject: [PATCH 18/26] ME176C: intel-mid: Add compatibility layer for old
  intel_mid_pmic.h
 
 ---
@@ -148,5 +148,5 @@ index 000000000000..fbdd566dd836
 +
 +#endif
 -- 
-2.17.0
+2.17.1
 

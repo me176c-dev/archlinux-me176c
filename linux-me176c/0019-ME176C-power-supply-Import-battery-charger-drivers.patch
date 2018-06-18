@@ -1,7 +1,7 @@
-From c0969aaab4e16e1799a7b89338943a0a74344549 Mon Sep 17 00:00:00 2001
+From 401df54ff0828a8b9aabff6066ccbc29e2c74e8d Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Fri, 19 May 2017 12:25:13 +0200
-Subject: [PATCH 18/25] ME176C: power: supply: Import battery/charger drivers
+Subject: [PATCH 19/26] ME176C: power: supply: Import battery/charger drivers
 
 Taken from: l-byt-r1_V12.10.1.33-201509171530-foss
 ---
@@ -29925,5 +29925,5 @@ index aae4e4a8bbb3..bcff1c68b689 100644
 +
 +obj-y += ASUS_BATTERY/ME176C/
 -- 
-2.17.0
+2.17.1
 
