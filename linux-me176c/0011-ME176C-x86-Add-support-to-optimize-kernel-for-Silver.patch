@@ -1,7 +1,7 @@
-From 298652d1a2d9540f3819dce9efc077bfa3fe3e45 Mon Sep 17 00:00:00 2001
+From 594896e71c81b6563ac875250d2090a42c472764 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:53:35 +0200
-Subject: [PATCH 12/26] ME176C: x86: Add support to optimize kernel for
+Subject: [PATCH 11/26] ME176C: x86: Add support to optimize kernel for
  Silvermont CPUs
 
 ---
@@ -143,5 +143,5 @@ index fb3a6de7440b..720083e19023 100644
  #else
  # define NEED_MOVBE	0
 -- 
-2.17.1
+2.18.0
 

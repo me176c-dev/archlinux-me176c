@@ -1,7 +1,7 @@
-From dbcacb37c3e9dac5d39e75a0861cfa52c87483d9 Mon Sep 17 00:00:00 2001
+From 73a5a19f4a0bb9ba8f6b2d852a7d32f5daa20833 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Thu, 10 Aug 2017 19:40:31 +0200
-Subject: [PATCH 13/26] ME176C: input: misc: Add ASUS Lid Cover driver
+Subject: [PATCH 12/26] ME176C: input: misc: Add ASUS Lid Cover driver
 
 ---
  drivers/input/misc/Kconfig    | 10 ++++
@@ -138,5 +138,5 @@ index 000000000000..14d887ca0b14
 +MODULE_AUTHOR("lambdadroid <lambdadroid@gmail.com>");
 +MODULE_DESCRIPTION("ASUS Lid Cover Driver");
 -- 
-2.17.1
+2.18.0
 

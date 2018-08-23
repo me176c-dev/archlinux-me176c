@@ -1,7 +1,7 @@
-From 10827a77c9f63f788da58054101c5459034e9754 Mon Sep 17 00:00:00 2001
+From 1039f91024cc5bec1d520854c48786813880351c Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sun, 18 Jun 2017 11:15:15 +0200
-Subject: [PATCH 22/26] ME176C: phy: tusb1210: Implement basic charger
+Subject: [PATCH 21/26] ME176C: phy: tusb1210: Implement basic charger
  detection (v3)
 
 v2: Major rewrite and cleanup:
@@ -339,5 +339,5 @@ index b8ec39ac4dfc..3fe6b996a1f4 100644
  }
  
 -- 
-2.17.1
+2.18.0
 

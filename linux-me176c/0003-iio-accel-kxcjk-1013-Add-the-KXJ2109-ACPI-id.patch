@@ -1,4 +1,4 @@
-From ade1d69f9d284c75ca758a0210e84d4f1ae22b80 Mon Sep 17 00:00:00 2001
+From c041c25cbf6878f092d9de6794970badcdebb7a2 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:52:54 +0200
 Subject: [PATCH 03/26] iio: accel: kxcjk-1013: Add the "KXJ2109" ACPI id
@@ -21,5 +21,5 @@ index 3f968c46e667..673efd1ce66b 100644
  	{ },
  };
 -- 
-2.17.1
+2.18.0
 

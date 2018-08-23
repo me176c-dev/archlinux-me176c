@@ -1,7 +1,7 @@
-From 36a112e91c99a99f5a1a7e7520eb6db1944c38a8 Mon Sep 17 00:00:00 2001
+From 225f9eb82096bbba827eda63103134629eb736ec Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Tue, 9 Jan 2018 21:41:08 +0100
-Subject: [PATCH 07/26] ME176C: Revert "pinctrl: intel: set default handler to
+Subject: [PATCH 06/26] ME176C: Revert "pinctrl: intel: set default handler to
  be handle_bad_irq()"
 
 This reverts commit 3ae02c14d964499da76b5ef4d8912710902e64f8.
@@ -37,5 +37,5 @@ index 71df0f70b61f..b17abfd6de6d 100644
  		dev_err(pctrl->dev, "failed to add irqchip\n");
  		return ret;
 -- 
-2.17.1
+2.18.0
 

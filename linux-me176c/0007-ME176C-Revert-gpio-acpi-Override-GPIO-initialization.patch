@@ -1,7 +1,7 @@
-From b831eebf4df6a009216c4b72e2ddb71b640b1005 Mon Sep 17 00:00:00 2001
+From c9c0efb6fbce40fa942b7154932f21e84a5db740 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Thu, 11 Jan 2018 18:18:31 +0100
-Subject: [PATCH 08/26] ME176C: Revert "gpio: acpi: Override GPIO
+Subject: [PATCH 07/26] ME176C: Revert "gpio: acpi: Override GPIO
  initialization flags"
 
 This breaks Bluetooth (and possibly other things). The GPIO flags
@@ -218,5 +218,5 @@ index 3d4d0634c9dd..62daf8304440 100644
  {
  	return ERR_PTR(-ENOENT);
 -- 
-2.17.1
+2.18.0
 

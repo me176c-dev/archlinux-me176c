@@ -1,7 +1,7 @@
-From 0c37b199f79cd0926eba27830417bdebed38fd5a Mon Sep 17 00:00:00 2001
+From a0c287461d8afe2ccf99ad3615e5629e40dbdc00 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sat, 24 Jun 2017 11:55:55 +0200
-Subject: [PATCH 11/26] ME176C: ASoC: Intel: Atom: Force use of BYT-CR BIOS
+Subject: [PATCH 10/26] ME176C: ASoC: Intel: Atom: Force use of BYT-CR BIOS
  resources
 
 Apparently, there are also BYT-T devices with the same...
@@ -31,5 +31,5 @@ index 0e928d54305d..6ee22c07ee3a 100644
  }
  
 -- 
-2.17.1
+2.18.0
 

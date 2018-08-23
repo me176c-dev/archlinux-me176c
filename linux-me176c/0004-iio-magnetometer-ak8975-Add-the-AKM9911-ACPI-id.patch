@@ -1,4 +1,4 @@
-From 5d22b16b9bdf7278bf9e0ce076ae0c8f27fc66a6 Mon Sep 17 00:00:00 2001
+From fdefbab59f40e6638b3f9acf4d7102e996646e9f Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 28 Jun 2017 11:53:35 +0200
 Subject: [PATCH 04/26] iio: magnetometer: ak8975: Add the "AKM9911" ACPI id
@@ -21,5 +21,5 @@ index 4ff883942f7b..ac83992cd8a2 100644
  	{ },
  };
 -- 
-2.17.1
+2.18.0
 

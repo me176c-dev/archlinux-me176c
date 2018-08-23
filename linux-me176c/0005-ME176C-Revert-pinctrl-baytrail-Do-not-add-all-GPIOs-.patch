@@ -1,7 +1,7 @@
-From 58f3a2717955aaaf7f51b650706376654d850592 Mon Sep 17 00:00:00 2001
+From cf0c57d4f44cc8df8f93eac002d35045572685e3 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Tue, 9 Jan 2018 21:40:56 +0100
-Subject: [PATCH 06/26] ME176C: Revert "pinctrl: baytrail: Do not add all GPIOs
+Subject: [PATCH 05/26] ME176C: Revert "pinctrl: baytrail: Do not add all GPIOs
  to IRQ domain"
 
 Causes problems with Bluetooth. We use one of the GPIOs as interrupt,
@@ -54,5 +54,5 @@ index beeb7cbb5015..fc92dc0581ed 100644
  #ifdef CONFIG_PM_SLEEP
  	vg->saved_context = devm_kcalloc(&vg->pdev->dev, gc->ngpio,
 -- 
-2.17.1
+2.18.0
 

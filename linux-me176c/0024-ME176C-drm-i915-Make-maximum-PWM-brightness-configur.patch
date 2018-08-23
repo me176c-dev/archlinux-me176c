@@ -1,7 +1,7 @@
-From e28bb9a713e5d0de7266ccec2f2ce88859079959 Mon Sep 17 00:00:00 2001
+From a2334091c484cfb7fe214c323a2f2a9074974682 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Fri, 9 Feb 2018 14:17:25 +0100
-Subject: [PATCH 25/26] ME176C: drm/i915: Make maximum PWM brightness
+Subject: [PATCH 24/26] ME176C: drm/i915: Make maximum PWM brightness
  configurable
 
 Right now, PWM backlight is exposed as percentage. However, the
@@ -87,5 +87,5 @@ index 8e0b177d6bba..e8ae6b7e5895 100644
  	panel->backlight.enabled = panel->backlight.level != 0;
  
 -- 
-2.17.1
+2.18.0
 

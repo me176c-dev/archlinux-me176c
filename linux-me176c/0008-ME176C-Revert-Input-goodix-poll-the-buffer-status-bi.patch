@@ -1,7 +1,7 @@
-From fd9358060aa58fddaf7f35059ac0c9bc0ed74fab Mon Sep 17 00:00:00 2001
+From 1539f371dd64e044c9db177a6208a0c2433a489e Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Sat, 3 Mar 2018 16:06:23 +0100
-Subject: [PATCH 09/26] ME176C: Revert "Input: goodix - poll the 'buffer
+Subject: [PATCH 08/26] ME176C: Revert "Input: goodix - poll the 'buffer
  status' bit before reading data"
 
 This reverts commit 9b5db7aab4d6b66f84f5e147c87eff4fe8b48651.
@@ -103,5 +103,5 @@ index 2bfa89ec552c..74e8dc1e16fe 100644
  
  static void goodix_ts_report_touch(struct goodix_ts_data *ts, u8 *coor_data)
 -- 
-2.17.1
+2.18.0
 

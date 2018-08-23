@@ -1,4 +1,4 @@
-From 2dae0d44f24c4ba352b47ae508815874802d4242 Mon Sep 17 00:00:00 2001
+From 9863cfe566788126226f4f1fafa35b4113c37cc2 Mon Sep 17 00:00:00 2001
 From: Roger Quadros <rogerq@ti.com>
 Date: Mon, 12 Feb 2018 15:30:08 +0200
 Subject: [PATCH 01/26] UPSTREAM: usb: dwc3: core: Fix ULPI PHYs and prevent
@@ -165,5 +165,5 @@ index b782ba58a7fc..abd1142c9e4d 100644
  	void __iomem		*regs;
  	size_t			regs_size;
 -- 
-2.17.1
+2.18.0
 

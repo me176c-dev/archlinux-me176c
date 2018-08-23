@@ -1,7 +1,7 @@
-From 59e3e2ae9b9f5371d0c3d8a42502ac7935bc25a3 Mon Sep 17 00:00:00 2001
+From 50beddcaf0dde2727bb5057496b1187ffb0c0caf Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Thu, 7 Sep 2017 12:17:48 +0200
-Subject: [PATCH 16/26] ME176C: pinctrl: baytrail: Remove warnings caused by
+Subject: [PATCH 15/26] ME176C: pinctrl: baytrail: Remove warnings caused by
  hardware config
 
 These warnings are printed whenever the screen is suspended. Since
@@ -50,5 +50,5 @@ index 18b46517812c..34526be0684b 100644
  	 * are used to indicate high and low level triggering
  	 */
 -- 
-2.17.1
+2.18.0
 

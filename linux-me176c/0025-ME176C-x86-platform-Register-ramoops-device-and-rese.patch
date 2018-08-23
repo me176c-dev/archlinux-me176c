@@ -1,7 +1,7 @@
-From 5907ac806bf6cc61d83c3fd4f63c58eb09663258 Mon Sep 17 00:00:00 2001
+From bc39ba106c5ca0902f382d2f0fe8935c94a7d1a3 Mon Sep 17 00:00:00 2001
 From: lambdadroid <lambdadroid@gmail.com>
 Date: Wed, 23 May 2018 19:42:41 +0200
-Subject: [PATCH 26/26] ME176C: x86/platform: Register ramoops device and
+Subject: [PATCH 25/26] ME176C: x86/platform: Register ramoops device and
  reserve memory
 
 ---
@@ -14,7 +14,7 @@ Subject: [PATCH 26/26] ME176C: x86/platform: Register ramoops device and
  create mode 100644 arch/x86/platform/me176c/ramoops.c
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index efbcf5283520..cf25bc7fdd3a 100644
+index dcb00acb6583..9bf321469ce4 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -834,6 +834,8 @@ static void __init simple_udelay_calibration(void)
@@ -26,7 +26,7 @@ index efbcf5283520..cf25bc7fdd3a 100644
  /*
   * Determine if we were loaded by an EFI loader.  If so, then we have also been
   * passed the efi memmap, systab, etc., so we should use these data structures
-@@ -1285,6 +1287,8 @@ void __init setup_arch(char **cmdline_p)
+@@ -1291,6 +1293,8 @@ void __init setup_arch(char **cmdline_p)
  
  	x86_init.resources.reserve_resources();
  
@@ -109,5 +109,5 @@ index 000000000000..13199b59a83f
 +}
 +device_initcall(me176c_ramoops_register);
 -- 
-2.17.1
+2.18.0
 
