@@ -1,0 +1,199 @@
+diff --git a/airootfs/root/customize_airootfs.sh b/airootfs/root/customize_airootfs.sh
+index bf5210c..1c0e897 100755
+--- a/airootfs/root/customize_airootfs.sh
++++ b/airootfs/root/customize_airootfs.sh
+@@ -21,3 +21,5 @@ sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
+ 
+ systemctl enable pacman-init.service choose-mirror.service
+ systemctl set-default multi-user.target
++
++systemctl enable upi_ug31xx.service thermald-me176c.service
+diff --git a/build.sh b/build.sh
+index 7eb2d1e..22bd4a3 100755
+--- a/build.sh
++++ b/build.sh
+@@ -3,9 +3,9 @@
+ set -e -u
+ 
+ iso_name=archlinux
+-iso_label="ARCH_$(date +%Y%m)"
+-iso_publisher="Arch Linux <http://www.archlinux.org>"
+-iso_application="Arch Linux Live/Rescue CD"
++iso_label="ARCH_ME176C_$(date +%Y%m)"
++iso_publisher="me176c-dev <https://github.com/me176c-dev>"
++iso_application="Arch Linux Live/Rescue CD (ME176C)"
+ iso_version=$(date +%Y.%m.%d)
+ install_dir=arch
+ work_dir=work
+@@ -61,7 +61,7 @@ make_pacman_conf() {
+ # Base installation, plus needed packages (airootfs)
+ make_basefs() {
+     mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" init
+-    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "haveged intel-ucode amd-ucode memtest86+ mkinitcpio-nfs-utils nbd zsh efitools" install
++    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "haveged intel-ucode-byt-t-c0 memtest86+ mkinitcpio-nfs-utils nbd zsh efitools linux-me176c" install
+ }
+ 
+ # Additional packages (airootfs)
+@@ -87,7 +87,7 @@ make_setup_mkinitcpio() {
+       gpg --export ${gpg_key} >${work_dir}/gpgkey
+       exec 17<>${work_dir}/gpgkey
+     fi
+-    ARCHISO_GNUPG_FD=${gpg_key:+17} mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux -g /boot/archiso.img' run
++    ARCHISO_GNUPG_FD=${gpg_key:+17} mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-me176c -g /boot/archiso.img' run
+     if [[ ${gpg_key} ]]; then
+       exec 17<&-
+     fi
+@@ -111,22 +111,19 @@ make_customize_airootfs() {
+ make_boot() {
+     mkdir -p ${work_dir}/iso/${install_dir}/boot/x86_64
+     cp ${work_dir}/x86_64/airootfs/boot/archiso.img ${work_dir}/iso/${install_dir}/boot/x86_64/archiso.img
+-    cp ${work_dir}/x86_64/airootfs/boot/vmlinuz-linux ${work_dir}/iso/${install_dir}/boot/x86_64/vmlinuz
++    cp ${work_dir}/x86_64/airootfs/boot/vmlinuz-linux-me176c ${work_dir}/iso/${install_dir}/boot/x86_64/vmlinuz
+ }
+ 
+ # Add other aditional/extra files to ${install_dir}/boot/
+ make_boot_extra() {
+     cp ${work_dir}/x86_64/airootfs/boot/memtest86+/memtest.bin ${work_dir}/iso/${install_dir}/boot/memtest
+     cp ${work_dir}/x86_64/airootfs/usr/share/licenses/common/GPL2/license.txt ${work_dir}/iso/${install_dir}/boot/memtest.COPYING
+-    cp ${work_dir}/x86_64/airootfs/boot/intel-ucode.img ${work_dir}/iso/${install_dir}/boot/intel_ucode.img
+-    cp ${work_dir}/x86_64/airootfs/usr/share/licenses/intel-ucode/LICENSE ${work_dir}/iso/${install_dir}/boot/intel_ucode.LICENSE
+-    cp ${work_dir}/x86_64/airootfs/boot/amd-ucode.img ${work_dir}/iso/${install_dir}/boot/amd_ucode.img
+-    cp ${work_dir}/x86_64/airootfs/usr/share/licenses/amd-ucode/LICENSE ${work_dir}/iso/${install_dir}/boot/amd_ucode.LICENSE
++    cp ${work_dir}/x86_64/airootfs/boot/intel-ucode-byt-t-c0.img ${work_dir}/iso/${install_dir}/boot/intel_ucode.img
+ }
+ 
+ # Prepare /${install_dir}/boot/syslinux
+ make_syslinux() {
+-    _uname_r=$(file -b ${work_dir}/x86_64/airootfs/boot/vmlinuz-linux| awk 'f{print;f=0} /version/{f=1}' RS=' ')
++    _uname_r=$(file -b ${work_dir}/x86_64/airootfs/boot/vmlinuz-linux-me176c| awk 'f{print;f=0} /version/{f=1}' RS=' ')
+     mkdir -p ${work_dir}/iso/${install_dir}/boot/syslinux
+     for _cfg in ${script_path}/syslinux/*.cfg; do
+         sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+@@ -187,7 +184,6 @@ make_efiboot() {
+     cp ${work_dir}/iso/${install_dir}/boot/x86_64/archiso.img ${work_dir}/efiboot/EFI/archiso/archiso.img
+ 
+     cp ${work_dir}/iso/${install_dir}/boot/intel_ucode.img ${work_dir}/efiboot/EFI/archiso/intel_ucode.img
+-    cp ${work_dir}/iso/${install_dir}/boot/amd_ucode.img ${work_dir}/efiboot/EFI/archiso/amd_ucode.img
+ 
+     mkdir -p ${work_dir}/efiboot/EFI/boot
+     cp ${work_dir}/x86_64/airootfs/usr/share/efitools/efi/PreLoader.efi ${work_dir}/efiboot/EFI/boot/bootx64.efi
+diff --git a/efiboot/loader/entries/archiso-x86_64-cd.conf b/efiboot/loader/entries/archiso-x86_64-cd.conf
+index b77ed98..d503f11 100644
+--- a/efiboot/loader/entries/archiso-x86_64-cd.conf
++++ b/efiboot/loader/entries/archiso-x86_64-cd.conf
+@@ -1,6 +1,5 @@
+ title   Arch Linux archiso x86_64 UEFI CD
+ linux   /EFI/archiso/vmlinuz.efi
+ initrd  /EFI/archiso/intel_ucode.img
+-initrd  /EFI/archiso/amd_ucode.img
+ initrd  /EFI/archiso/archiso.img
+ options archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL%
+diff --git a/efiboot/loader/entries/archiso-x86_64-usb.conf b/efiboot/loader/entries/archiso-x86_64-usb.conf
+index 09adca4..14f3d02 100644
+--- a/efiboot/loader/entries/archiso-x86_64-usb.conf
++++ b/efiboot/loader/entries/archiso-x86_64-usb.conf
+@@ -1,6 +1,5 @@
+ title   Arch Linux archiso x86_64 UEFI USB
+ linux   /%INSTALL_DIR%/boot/x86_64/vmlinuz
+ initrd  /%INSTALL_DIR%/boot/intel_ucode.img
+-initrd  /%INSTALL_DIR%/boot/amd_ucode.img
+ initrd  /%INSTALL_DIR%/boot/x86_64/archiso.img
+ options archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL%
+diff --git a/mkinitcpio.conf b/mkinitcpio.conf
+index c04f1dc..49749ca 100644
+--- a/mkinitcpio.conf
++++ b/mkinitcpio.conf
+@@ -1,2 +1,3 @@
+-HOOKS=(base udev memdisk archiso_shutdown archiso archiso_loop_mnt archiso_pxe_common archiso_pxe_nbd archiso_pxe_http archiso_pxe_nfs archiso_kms block filesystems keyboard)
++MODULES=(i915)
++HOOKS=(base udev archiso_shutdown archiso archiso_loop_mnt archiso_pxe_common archiso_pxe_nbd archiso_pxe_http archiso_pxe_nfs block filesystems keyboard)
+ COMPRESSION="xz"
+diff --git a/packages.x86_64 b/packages.x86_64
+index 45798cc..f23fd18 100644
+--- a/packages.x86_64
++++ b/packages.x86_64
+@@ -1,6 +1,5 @@
+ arch-install-scripts
+ b43-fwcutter
+-broadcom-wl
+ btrfs-progs
+ clonezilla
+ crda
+@@ -30,6 +29,9 @@ lftp
+ linux-atm
+ lsscsi
+ mc
++me176c-battery
++me176c-firmware
++me176c-thermal
+ mtools
+ ndisc6
+ nfs-utils
+diff --git a/pacman.conf b/pacman.conf
+index c678d01..f08a079 100644
+--- a/pacman.conf
++++ b/pacman.conf
+@@ -23,7 +23,7 @@ HoldPkg     = pacman glibc
+ Architecture = auto
+ 
+ # Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
+-#IgnorePkg   =
++IgnorePkg    = linux
+ #IgnoreGroup =
+ 
+ #NoUpgrade   =
+@@ -94,6 +94,10 @@ Include = /etc/pacman.d/mirrorlist
+ #[multilib]
+ #Include = /etc/pacman.d/mirrorlist
+ 
++[me176c]
++SigLevel = Optional TrustAll
++Server = file:///tmp/arch
++
+ # An example of a custom package repository.  See the pacman manpage for
+ # tips on creating your own repositories.
+ #[custom]
+diff --git a/syslinux/archiso_pxe.cfg b/syslinux/archiso_pxe.cfg
+index 92af749..481371a 100644
+--- a/syslinux/archiso_pxe.cfg
++++ b/syslinux/archiso_pxe.cfg
+@@ -7,7 +7,7 @@ It allows you to install Arch Linux or perform system maintenance.
+ ENDTEXT
+ MENU LABEL Boot Arch Linux (x86_64) (NBD)
+ LINUX boot/x86_64/vmlinuz
+-INITRD boot/intel_ucode.img,boot/amd_ucode.img,boot/x86_64/archiso.img
++INITRD boot/intel_ucode.img,boot/x86_64/archiso.img
+ APPEND archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL% archiso_nbd_srv=${pxeserver}
+ SYSAPPEND 3
+ 
+@@ -18,7 +18,7 @@ It allows you to install Arch Linux or perform system maintenance.
+ ENDTEXT
+ MENU LABEL Boot Arch Linux (x86_64) (NFS)
+ LINUX boot/x86_64/vmlinuz
+-INITRD boot/intel_ucode.img,boot/amd_ucode.img,boot/x86_64/archiso.img
++INITRD boot/intel_ucode.img,boot/x86_64/archiso.img
+ APPEND archisobasedir=%INSTALL_DIR% archiso_nfs_srv=${pxeserver}:/run/archiso/bootmnt
+ SYSAPPEND 3
+ 
+@@ -29,7 +29,7 @@ It allows you to install Arch Linux or perform system maintenance.
+ ENDTEXT
+ MENU LABEL Boot Arch Linux (x86_64) (HTTP)
+ LINUX boot/x86_64/vmlinuz
+-INITRD boot/intel_ucode.img,boot/amd_ucode.img,boot/x86_64/archiso.img
++INITRD boot/intel_ucode.img,boot/x86_64/archiso.img
+ APPEND archisobasedir=%INSTALL_DIR% archiso_http_srv=http://${pxeserver}/
+ SYSAPPEND 3
+ 
+diff --git a/syslinux/archiso_sys.cfg b/syslinux/archiso_sys.cfg
+index a35a1ea..0c82573 100644
+--- a/syslinux/archiso_sys.cfg
++++ b/syslinux/archiso_sys.cfg
+@@ -7,7 +7,7 @@ It allows you to install Arch Linux or perform system maintenance.
+ ENDTEXT
+ MENU LABEL Boot Arch Linux (x86_64)
+ LINUX boot/x86_64/vmlinuz
+-INITRD boot/intel_ucode.img,boot/amd_ucode.img,boot/x86_64/archiso.img
++INITRD boot/intel_ucode.img,boot/x86_64/archiso.img
+ APPEND archisobasedir=%INSTALL_DIR% archisolabel=%ARCHISO_LABEL%
+ 
+ INCLUDE boot/syslinux/archiso_tail.cfg
