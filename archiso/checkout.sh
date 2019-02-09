@@ -9,3 +9,4 @@ git init
 git add -A
 git commit -m "Initial Commit"
 git apply ../relang.patch
+git add -A
