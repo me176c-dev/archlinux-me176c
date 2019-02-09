@@ -1,0 +1,14 @@
+pkgbase = me176c-bootstrap
+	pkgdesc = me176c-boot bootstrap loader
+	pkgver = master
+	pkgrel = 0
+	url = https://github.com/me176c-dev/me176c-boot/tree/master/bootstrap
+	arch = x86_64
+	license = BSD
+	makedepends = meson
+	makedepends = gnu-efi-libs
+	source = https://github.com/me176c-dev/me176c-boot/archive/master.tar.gz
+	sha256sums = SKIP
+
+pkgname = me176c-bootstrap
+
