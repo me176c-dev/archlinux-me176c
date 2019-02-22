@@ -123,7 +123,7 @@ index c04f1dc..49749ca 100644
 +HOOKS=(base udev archiso_shutdown archiso archiso_loop_mnt archiso_pxe_common archiso_pxe_nbd archiso_pxe_http archiso_pxe_nfs block filesystems keyboard)
  COMPRESSION="xz"
 diff --git a/packages.x86_64 b/packages.x86_64
-index 45798cc..8a3399a 100644
+index 45798cc..85ef746 100644
 --- a/packages.x86_64
 +++ b/packages.x86_64
 @@ -1,6 +1,7 @@
@@ -135,17 +135,15 @@ index 45798cc..8a3399a 100644
  btrfs-progs
  clonezilla
  crda
-@@ -30,6 +31,10 @@ lftp
- linux-atm
- lsscsi
- mc
+@@ -63,3 +64,8 @@ wireless_tools
+ wpa_actiond
+ wvdial
+ xl2tpd
++# Packages added for the ME176C ISO
 +me176c-battery
 +me176c-factory
 +me176c-firmware
-+me176c-thermal
- mtools
- ndisc6
- nfs-utils
++thermald-me176c
 diff --git a/pacman.conf b/pacman.conf
 index c678d01..f08a079 100644
 --- a/pacman.conf
