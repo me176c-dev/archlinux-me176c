@@ -5,8 +5,6 @@ BUILDDIR="$DIR/build"
 WORKDIR="$BUILDDIR/pkgbuild"
 CHROOT="$BUILDDIR/chroot"
 
-export SRCDEST="$BUILDDIR/src"
-
 pkg="$1"
 if [[ ! -f "$pkg/PKGBUILD" ]]; then
     echo "Usage: $0 <pkgbase>"
@@ -50,7 +48,7 @@ if [[ ! -d "$CHROOT" ]]; then
 fi
 
 # Build package
-sudo --preserve-env=SRCDEST makechrootpkg -cur "$CHROOT"
+sudo SRCDEST="$BUILDDIR/src" makechrootpkg -cur "$CHROOT"
 
 # Check package with namcap
 packages=$(makepkg --packagelist)
@@ -67,7 +65,8 @@ git push origin "$tag"
 git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
 
 # Create GitHub release
-assets=$(awk '{printf "-a %s -a %s.sig", $0, $0}' <<< "$packages")
-hub release create -m "$pkg $pkgver" $assets "$tag"
+assets=$(xargs realpath --relative-to=. <<< "$packages" | awk '{printf "-a %s -a %s.sig ", $0, $0}')
+hub release create -d -m "$pkg $pkgver" $assets "$tag"
+hub release edit --draft=false -m "$pkg $pkgver" "$tag"
 
 git worktree remove -f "$WORKDIR" 2> /dev/null || :
