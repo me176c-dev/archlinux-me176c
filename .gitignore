@@ -1,8 +1,9 @@
 ### Arch Linux ###
 src
 pkg
-*.sign
-*.pkg
+*.sig
+*.pkg*
+build
 
 ### Binaries ###
 *.bin
