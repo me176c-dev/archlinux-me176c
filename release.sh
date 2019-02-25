@@ -22,7 +22,7 @@ if output=$(git status --porcelain -- .) && [ -n "$output" ]; then
     exit 1
 fi
 
-pkgver=$(grep pkgver .SRCINFO | awk '{print $3}')
+pkgver=$(awk '/pkgver/ { printf "%s-", $3 } /pkgrel/ { print $3 }' .SRCINFO)
 echo "Building '$pkg' $pkgver..."
 namcap PKGBUILD
 
