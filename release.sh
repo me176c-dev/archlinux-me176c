@@ -20,8 +20,12 @@ if output=$(git status --porcelain -- .) && [ -n "$output" ]; then
     exit 1
 fi
 
-pkgver=$(awk '/pkgver/ { printf "%s-", $3 } /pkgrel/ { print $3 }' .SRCINFO)
-echo "Building '$pkg' $pkgver..."
+pkgv=$(awk '
+    /pkgver/ { pkgver=$3 }
+    /pkgrel/ { pkgrel=$3 }
+    END { print pkgver "-" pkgrel }
+' .SRCINFO)
+echo "Building '$pkg' $pkgv..."
 namcap PKGBUILD
 
 read -p "Continue building (y/n)? " choice
@@ -29,7 +33,7 @@ read -p "Continue building (y/n)? " choice
 
 cd "$DIR"
 branch="split/$pkg"
-tag="$pkg/$pkgver"
+tag="$pkg/$pkgv"
 
 # Prepare package release
 git branch -D "$branch" &> /dev/null || :
@@ -38,7 +42,7 @@ git tag -s "$tag" "$branch"
 git branch -D "$branch" &> /dev/null
 
 git worktree remove -f "$WORKDIR" 2> /dev/null || :
-git worktree add -f "$WORKDIR" "tags/$pkg/$pkgver"
+git worktree add -f "$WORKDIR" "tags/$pkg/$pkgv"
 cd "$WORKDIR"
 
 # Setup chroot if it does not exist yet
@@ -66,7 +70,7 @@ git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
 
 # Create GitHub release
 assets=$(xargs realpath --relative-to=. <<< "$packages" | awk '{printf "-a %s -a %s.sig ", $0, $0}')
-hub release create -d -m "$pkg $pkgver" $assets "$tag"
-hub release edit --draft=false -m "$pkg $pkgver" "$tag"
+hub release create -d -m "$pkg $pkgv" $assets "$tag"
+hub release edit --draft=false -m "$pkg $pkgv" "$tag"
 
 git worktree remove -f "$WORKDIR" 2> /dev/null || :
