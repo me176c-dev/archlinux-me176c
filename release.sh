@@ -4,6 +4,8 @@ DIR="$PWD"
 BUILDDIR="$DIR/build"
 WORKDIR="$BUILDDIR/pkgbuild"
 CHROOT="$BUILDDIR/chroot"
+SRCDEST="$BUILDDIR/src"
+PKGDEST="$BUILDDIR/repo/.new"
 
 pkg="$1"
 if [[ ! -f "$pkg/PKGBUILD" ]]; then
@@ -28,8 +30,9 @@ pkgv=$(awk '
 echo "Building '$pkg' $pkgv..."
 namcap PKGBUILD
 
-read -p "Continue building (y/n)? " choice
-[[ "${choice,,}" == "y" ]]
+read -p "Continue building (Y/n)? " choice
+[[ -z "$choice" || "${choice,,}" == "y" ]]
+mkdir -p "$SRCDEST" "$PKGDEST"
 
 cd "$DIR"
 branch="split/$pkg"
@@ -49,28 +52,30 @@ cd "$WORKDIR"
 if [[ ! -d "$CHROOT" ]]; then
     mkdir -p "$CHROOT"
     mkarchroot "$CHROOT/root" base-devel
+else
+    arch-nspawn "$CHROOT/root" pacman -Syu --noconfirm
 fi
 
 # Build package
-sudo SRCDEST="$BUILDDIR/src" makechrootpkg -cur "$CHROOT"
+sudo SRCDEST="$SRCDEST" PKGDEST="$PKGDEST" makechrootpkg -cr "$CHROOT"
+packages=$(makepkg --packagelist | xargs realpath --relative-to=.)
 
-# Check package with namcap
-packages=$(makepkg --packagelist)
+cd "$PKGDEST"
 xargs namcap <<< "$packages"
-
-read -p "Continue uploading (y/n)? " choice
-[[ "${choice,,}" == "y" ]]
 
 # Sign packages
 xargs -L1 gpg --detach-sign --no-armor <<< "$packages"
 
-# Upload tag and push to AUR
-git push origin "$tag"
-git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
+read -p "Release on AUR/GitHub (Y/n)? " choice
+if [[ -z "$choice" || "${choice,,}" == "y" ]]; then
+    # Upload tag and push to AUR
+    git push origin "$tag"
+    git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
 
-# Create GitHub release
-assets=$(xargs realpath --relative-to=. <<< "$packages" | awk '{printf "-a %s -a %s.sig ", $0, $0}')
-hub release create -d -m "$pkg $pkgv" $assets "$tag"
-hub release edit --draft=false -m "$pkg $pkgv" "$tag"
+    # Create GitHub release
+    assets=$(awk '{printf "-a %s -a %s.sig ", $0, $0}' <<< "$packages")
+    hub release create -d -m "$pkg $pkgv" $assets "$tag"
+    hub release edit --draft=false -m "$pkg $pkgv" "$tag"
+fi
 
 git worktree remove -f "$WORKDIR" 2> /dev/null || :
