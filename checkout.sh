@@ -8,5 +8,5 @@ cd releng
 git init
 git add -A
 git commit -m "Initial Commit"
-git apply ../relang.patch
+git apply ../releng.patch
 git add -A
