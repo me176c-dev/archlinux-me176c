@@ -145,7 +145,7 @@ index 45798cc..85ef746 100644
 +me176c-firmware
 +thermald-me176c
 diff --git a/pacman.conf b/pacman.conf
-index c678d01..f08a079 100644
+index c678d01..7ba4b29 100644
 --- a/pacman.conf
 +++ b/pacman.conf
 @@ -23,7 +23,7 @@ HoldPkg     = pacman glibc
@@ -162,8 +162,8 @@ index c678d01..f08a079 100644
  #Include = /etc/pacman.d/mirrorlist
  
 +[me176c]
-+SigLevel = Optional TrustAll
-+Server = file:///tmp/arch
++SigLevel = Required
++Server = https://me176c.uber.space/archlinux
 +
  # An example of a custom package repository.  See the pacman manpage for
  # tips on creating your own repositories.
