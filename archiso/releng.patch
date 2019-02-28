@@ -9,7 +9,7 @@ index bf5210c..4562a28 100755
 +systemctl enable bluetooth.service
 +systemctl enable upi_ug31xx.service thermald-me176c.service me176c-factory.service
 diff --git a/build.sh b/build.sh
-index 4b56542..0ed2ace 100755
+index 4b56542..fe5618f 100755
 --- a/build.sh
 +++ b/build.sh
 @@ -3,9 +3,9 @@
@@ -29,7 +29,7 @@ index 4b56542..0ed2ace 100755
  make_basefs() {
      mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" init
      mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "haveged intel-ucode amd-ucode memtest86+ mkinitcpio-nfs-utils nbd zsh efitools" install
-+    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "linux-me176c me176c-acpi" install
++    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "me176c" install
  }
  
  # Additional packages (airootfs)
@@ -123,7 +123,7 @@ index c04f1dc..49749ca 100644
 +HOOKS=(base udev archiso_shutdown archiso archiso_loop_mnt archiso_pxe_common archiso_pxe_nbd archiso_pxe_http archiso_pxe_nfs block filesystems keyboard)
  COMPRESSION="xz"
 diff --git a/packages.x86_64 b/packages.x86_64
-index 45798cc..85ef746 100644
+index 45798cc..c315778 100644
 --- a/packages.x86_64
 +++ b/packages.x86_64
 @@ -1,6 +1,7 @@
@@ -135,15 +135,6 @@ index 45798cc..85ef746 100644
  btrfs-progs
  clonezilla
  crda
-@@ -63,3 +64,8 @@ wireless_tools
- wpa_actiond
- wvdial
- xl2tpd
-+# Packages added for the ME176C ISO
-+me176c-battery
-+me176c-factory
-+me176c-firmware
-+thermald-me176c
 diff --git a/pacman.conf b/pacman.conf
 index c678d01..7ba4b29 100644
 --- a/pacman.conf
