@@ -9,7 +9,7 @@ index bf5210c..4562a28 100755
 +systemctl enable bluetooth.service
 +systemctl enable upi_ug31xx.service thermald-me176c.service me176c-factory.service
 diff --git a/build.sh b/build.sh
-index 4b56542..2a60fa1 100755
+index 4b56542..0ed2ace 100755
 --- a/build.sh
 +++ b/build.sh
 @@ -3,9 +3,9 @@
@@ -29,7 +29,7 @@ index 4b56542..2a60fa1 100755
  make_basefs() {
      mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" init
      mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "haveged intel-ucode amd-ucode memtest86+ mkinitcpio-nfs-utils nbd zsh efitools" install
-+    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "linux-me176c me176c-acpi me176c-bootstrap" install
++    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "linux-me176c me176c-acpi" install
  }
  
  # Additional packages (airootfs)
@@ -70,7 +70,7 @@ index 4b56542..2a60fa1 100755
      cp ${work_dir}/x86_64/airootfs/usr/share/efitools/efi/HashTool.efi ${work_dir}/iso/EFI/boot/
  
 -    cp ${work_dir}/x86_64/airootfs/usr/lib/systemd/boot/efi/systemd-bootx64.efi ${work_dir}/iso/EFI/boot/loader.efi
-+    cp ${work_dir}/x86_64/airootfs/opt/me176c/bootstrap.efi ${work_dir}/iso/EFI/boot/loader.efi
++    curl -Lo ${work_dir}/iso/EFI/boot/loader.efi https://github.com/me176c-dev/me176c-boot/releases/download/0.3.0/me176c-bootstrap.efi
 +    cp ${work_dir}/x86_64/airootfs/usr/lib/systemd/boot/efi/systemd-bootx64.efi ${work_dir}/iso/systemd-bootx64.efi
  
      mkdir -p ${work_dir}/iso/loader/entries
@@ -86,7 +86,7 @@ index 4b56542..2a60fa1 100755
      cp ${work_dir}/x86_64/airootfs/usr/share/efitools/efi/HashTool.efi ${work_dir}/efiboot/EFI/boot/
  
 -    cp ${work_dir}/x86_64/airootfs/usr/lib/systemd/boot/efi/systemd-bootx64.efi ${work_dir}/efiboot/EFI/boot/loader.efi
-+    cp ${work_dir}/x86_64/airootfs/opt/me176c/bootstrap.efi ${work_dir}/efiboot/EFI/boot/loader.efi
++    cp ${work_dir}/iso/EFI/boot/loader.efi ${work_dir}/efiboot/EFI/boot/loader.efi
 +    cp ${work_dir}/x86_64/airootfs/usr/lib/systemd/boot/efi/systemd-bootx64.efi ${work_dir}/efiboot/systemd-bootx64.efi
  
      mkdir -p ${work_dir}/efiboot/loader/entries
