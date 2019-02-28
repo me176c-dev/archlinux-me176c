@@ -52,9 +52,12 @@ cd "$WORKDIR"
 if [[ ! -d "$CHROOT" ]]; then
     mkdir -p "$CHROOT"
     mkarchroot "$CHROOT/root" base-devel
-else
-    arch-nspawn "$CHROOT/root" pacman -Syu --noconfirm
+
+    # Add ME176C repository
+    cat "$DIR/pacman-me176c.conf" | sudo tee -a "$CHROOT/root/etc/pacman.conf" > /dev/null
 fi
+
+arch-nspawn "$CHROOT/root" pacman -Syu --noconfirm
 
 # Build package
 sudo SRCDEST="$SRCDEST" PKGDEST="$PKGDEST" makechrootpkg -cr "$CHROOT"
