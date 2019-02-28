@@ -1,3 +1,16 @@
+diff --git a/airootfs/etc/systemd/system/pacman-init.service b/airootfs/etc/systemd/system/pacman-init.service
+index 23b8144..5906cdf 100644
+--- a/airootfs/etc/systemd/system/pacman-init.service
++++ b/airootfs/etc/systemd/system/pacman-init.service
+@@ -9,7 +9,7 @@ After=etc-pacman.d-gnupg.mount
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart=/usr/bin/pacman-key --init
+-ExecStart=/usr/bin/pacman-key --populate archlinux
++ExecStart=/usr/bin/pacman-key --populate archlinux me176c
+ 
+ [Install]
+ WantedBy=multi-user.target
 diff --git a/airootfs/root/customize_airootfs.sh b/airootfs/root/customize_airootfs.sh
 index bf5210c..4562a28 100755
 --- a/airootfs/root/customize_airootfs.sh
@@ -9,7 +22,7 @@ index bf5210c..4562a28 100755
 +systemctl enable bluetooth.service
 +systemctl enable upi_ug31xx.service thermald-me176c.service me176c-factory.service
 diff --git a/build.sh b/build.sh
-index 4b56542..fe5618f 100755
+index 4b56542..4e4dfa3 100755
 --- a/build.sh
 +++ b/build.sh
 @@ -3,9 +3,9 @@
@@ -42,7 +55,19 @@ index 4b56542..fe5618f 100755
      if [[ ${gpg_key} ]]; then
        exec 17<&-
      fi
-@@ -111,7 +112,7 @@ make_customize_airootfs() {
+@@ -101,6 +102,11 @@ make_customize_airootfs() {
+ 
+     curl -o ${work_dir}/x86_64/airootfs/etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
+ 
++    # TODO: Consider providing a me176c-keyring package for this
++    local lambdadroid_key=2B1138A8BB59D786A3BF42AAD996DA70572407FB
++    pacman-key --export ${lambdadroid_key} > ${work_dir}/x86_64/airootfs/usr/share/pacman/keyrings/me176c.gpg
++    echo "${lambdadroid_key}:0:" > ${work_dir}/x86_64/airootfs/usr/share/pacman/keyrings/me176c-trusted
++
+     lynx -dump -nolist 'https://wiki.archlinux.org/index.php/Installation_Guide?action=render' >> ${work_dir}/x86_64/airootfs/root/install.txt
+ 
+     mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
+@@ -111,7 +117,7 @@ make_customize_airootfs() {
  make_boot() {
      mkdir -p ${work_dir}/iso/${install_dir}/boot/x86_64
      cp ${work_dir}/x86_64/airootfs/boot/archiso.img ${work_dir}/iso/${install_dir}/boot/x86_64/archiso.img
@@ -51,7 +76,7 @@ index 4b56542..fe5618f 100755
  }
  
  # Add other aditional/extra files to ${install_dir}/boot/
-@@ -122,11 +123,12 @@ make_boot_extra() {
+@@ -122,11 +128,12 @@ make_boot_extra() {
      cp ${work_dir}/x86_64/airootfs/usr/share/licenses/intel-ucode/LICENSE ${work_dir}/iso/${install_dir}/boot/intel_ucode.LICENSE
      cp ${work_dir}/x86_64/airootfs/boot/amd-ucode.img ${work_dir}/iso/${install_dir}/boot/amd_ucode.img
      cp ${work_dir}/x86_64/airootfs/usr/share/licenses/amd-ucode/LICENSE ${work_dir}/iso/${install_dir}/boot/amd_ucode.LICENSE
@@ -65,7 +90,7 @@ index 4b56542..fe5618f 100755
      mkdir -p ${work_dir}/iso/${install_dir}/boot/syslinux
      for _cfg in ${script_path}/syslinux/*.cfg; do
          sed "s|%ARCHISO_LABEL%|${iso_label}|g;
-@@ -156,7 +158,8 @@ make_efi() {
+@@ -156,7 +163,8 @@ make_efi() {
      cp ${work_dir}/x86_64/airootfs/usr/share/efitools/efi/PreLoader.efi ${work_dir}/iso/EFI/boot/bootx64.efi
      cp ${work_dir}/x86_64/airootfs/usr/share/efitools/efi/HashTool.efi ${work_dir}/iso/EFI/boot/
  
@@ -75,7 +100,7 @@ index 4b56542..fe5618f 100755
  
      mkdir -p ${work_dir}/iso/loader/entries
      cp ${script_path}/efiboot/loader/loader.conf ${work_dir}/iso/loader/
-@@ -188,12 +191,14 @@ make_efiboot() {
+@@ -188,12 +196,14 @@ make_efiboot() {
  
      cp ${work_dir}/iso/${install_dir}/boot/intel_ucode.img ${work_dir}/efiboot/EFI/archiso/intel_ucode.img
      cp ${work_dir}/iso/${install_dir}/boot/amd_ucode.img ${work_dir}/efiboot/EFI/archiso/amd_ucode.img
