@@ -69,20 +69,16 @@ xargs namcap <<< "$packages"
 # Sign packages
 xargs -L1 gpg --detach-sign --no-armor <<< "$packages"
 
-read -p "Release on GitHub (Y/n)? " choice
+read -p "Release on AUR/GitHub (Y/n)? " choice
 if [[ -z "$choice" || "${choice,,}" == "y" ]]; then
     # Upload tag and push to AUR
     git push origin "$tag"
+    git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
 
     # Create GitHub release
     assets=$(awk '{printf "-a %s -a %s.sig ", $0, $0}' <<< "$packages")
     hub release create -d -m "$pkg $pkgv" $assets "$tag"
     hub release edit --draft=false -m "$pkg $pkgv" "$tag"
-fi
-
-read -p "Release on AUR (Y/n)? " choice
-if [[ -z "$choice" || "${choice,,}" == "y" ]]; then
-    git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
 fi
 
 git worktree remove -f "$WORKDIR" 2> /dev/null || :
