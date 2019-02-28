@@ -8,7 +8,7 @@ REPODIR="$BUILDDIR/repo"
 PKGDEST="$REPODIR/.new"
 
 REMOTE="me176c@me176c.uber.space:~/html/archlinux/"
-RSYNC_OPTIONS=(-e ssh --info=del,progress2 --dirs --links --times --exclude '.*')
+RSYNC_OPTIONS=(-e ssh --info=del,progress2 --dirs --links --times --exclude '.*' --exclude '*.old*')
 
 mkdir -p "$REPODIR"
 cd "$REPODIR"
