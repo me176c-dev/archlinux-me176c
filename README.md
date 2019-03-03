@@ -5,8 +5,8 @@ Additional Arch Linux (AUR) packages for use with the ASUS MeMO Pad 7 (ME176C(X)
 These packages are documented in the
 [ASUS MeMO Pad 7 (ME176C(X)) article on the ArchWiki](https://wiki.archlinux.org/index.php/ASUS_MeMO_Pad_7_(ME176C(X))).
 
-Additionally to the [ME176C User Repository](TODO), all binary packages,
-including all older versions, are also available as
+Additionally to the [ME176C Unofficial User Repository](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#me176c),
+all binary packages, including all older versions, are also available as
 [Releases](https://github.com/me176c-dev/archlinux-me176c) for manual download.
 
 ## Building
