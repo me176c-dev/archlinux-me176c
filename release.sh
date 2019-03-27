@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+
 DIR="$PWD"
 BUILDDIR="$DIR/build"
 WORKDIR="$BUILDDIR/pkgbuild"
@@ -38,9 +39,19 @@ cd "$DIR"
 branch="split/$pkg"
 tag="$pkg/$pkgv"
 
+
 # Prepare package release
 git branch -D "$branch" &> /dev/null || :
+
+# If necessary, cut of the commit history at a specific commit
+start=$(grep -sv '^#' "$pkg/.subtree-start" || :)
+if [[ -n "$start" ]]; then
+    trap "git replace -d $start" EXIT
+    git replace -g "$start"
+fi
+
 git subtree split --prefix "$pkg" -b "$branch"
+
 git tag -s "$tag" "$branch"
 git branch -D "$branch" &> /dev/null
 
@@ -73,7 +84,7 @@ read -p "Release on AUR/GitHub (Y/n)? " choice
 if [[ -z "$choice" || "${choice,,}" == "y" ]]; then
     # Upload tag and push to AUR
     git push origin "$tag"
-    git push "aur@aur.archlinux.org:$pkg.git" "$tag":master
+    git push "aur@aur.archlinux.org:$pkg.git" "$tag^{}":refs/heads/master
 
     # Create GitHub release
     assets=$(awk '{printf "-a %s -a %s.sig ", $0, $0}' <<< "$packages")
