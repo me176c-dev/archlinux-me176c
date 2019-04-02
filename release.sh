@@ -43,7 +43,7 @@ tag="$pkg/$pkgv"
 # Prepare package release
 git branch -D "$branch" &> /dev/null || :
 
-# If necessary, cut of the commit history at a specific commit
+# If necessary, cut off the commit history at a specific commit
 start=$(grep -sv '^#' "$pkg/.subtree-start" || :)
 if [[ -n "$start" ]]; then
     trap "git replace -d $start" EXIT
