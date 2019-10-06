@@ -2,7 +2,7 @@
 
 #pkgbase=linux               # Build stock -ARCH kernel
 pkgbase=linux-me176c         # Build kernel with a different name
-pkgver=4.19.36
+pkgver=4.19.77
 pkgrel=1
 arch=(x86_64)
 url="https://github.com/me176c-dev/linux-me176c"
@@ -24,7 +24,7 @@ validpgpkeys=(
   '2B1138A8BB59D786A3BF42AAD996DA70572407FB'  # lambdadroid
 )
 sha256sums=('SKIP'
-            '6e371aca1979e43397cdf37ffaf418077937dea82648611144ee4f5ca75f62db'
+            '5d51854457fc3a5838f680c7a51f4267d97cbfdea9488d32306df7a5518fae4b'
             'ae2e95db94ef7176207c690224169594d49445e04249d2499e9d2fbc117a0b21'
             'c043f3033bb781e2688794a59f6d1f7ed49ef9b13eb77ff9a425df33a244a636'
             'ad6344badc91ad0630caacde83f7f9b97276f80d26a20619a87952be65492c65')
