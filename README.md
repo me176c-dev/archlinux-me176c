@@ -1,6 +1,11 @@
 # archlinux-me176c
 Additional Arch Linux (AUR) packages for use with the ASUS MeMO Pad 7 (ME176C(X)).
 
+**Note:** The Arch Linux (AUR) packages are no longer updated. If you want to run
+Linux on this tablet, consider taking a look at
+[postmarketOS](https://wiki.postmarketos.org/wiki/ASUS_MeMO_Pad_7_(asus-me176c))
+instead.
+
 ## Usage
 These packages are documented in the
 [ASUS MeMO Pad 7 (ME176C(X)) article on the ArchWiki](https://wiki.archlinux.org/index.php/ASUS_MeMO_Pad_7_(ME176C(X))).
